@@ -62,6 +62,18 @@ FlashList has known recycling issues with mixed-height items. LegendList support
 **WebView bidirectional bridge**
 Rather than polling, the app uses a typed message protocol over `postMessage`/`onMessage`. Messages are discriminated unions — both native and web sides are fully typed. This prevents the classic "magic string" bugs in WebView communication.
 
+### Engineering Tradeoffs, Risks, and Mitigations
+
+| Decision | Tradeoff | Risk | Mitigation |
+|---|---|---|---|
+| React Query + Zustand split | Two state tools increase conceptual overhead | Team misuse can duplicate state and drift | Clear ownership map (server vs client state), granular selectors, query key conventions |
+| Free random API data mapping | Data is inconsistent across requests | UI breakage from missing/invalid fields | Defensive mapping defaults, runtime numeric guards, fallback images |
+| WebView local HTML template | Fast to iterate and portable | Bridge payload tampering if unchecked | Zod-validated message contract + URL allowlist checks |
+| Token refresh in interceptor | Transparent UX when token expires | Edge-case race conditions under concurrent 401s | Shared refresh lifecycle helper + request retry gate + auth fallback clear |
+| Offline queued actions | Better UX on flaky networks | Silent replay confusion | Offline sync toasts (syncing/success/failure) + query invalidation on reconnect |
+| Biometric login support | Faster repeat auth | Higher sensitivity on compromised devices | Root/jailbreak risk check + biometric disable policy on compromised signal |
+| Sentry in production only | Reduces local noise | Missing diagnostics in release without DSN | Bootstrap metadata + optional env-based DSN init |
+
 ---
 
 ## Setup
@@ -89,9 +101,13 @@ Create a `.env.local` file in `lms-app/`:
 ```env
 EXPO_PUBLIC_API_BASE_URL=https://api.freeapi.app
 EXPO_PUBLIC_SENTRY_DSN=your_sentry_dsn_here
+EXPO_PUBLIC_SUPABASE_URL=your_supabase_project_url
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
 > `EXPO_PUBLIC_SENTRY_DSN` is optional — app works without it, errors just won't be reported to Sentry.
+>
+> Supabase vars are optional. If provided, analytics events are posted to `analytics_events` via REST.
 
 ### Run
 
@@ -114,7 +130,15 @@ npx expo run:ios
 npm test                # all tests
 npm run test:watch      # watch mode
 npm run test:coverage   # coverage report (target: >70%)
+npm run e2e:smoke       # Maestro smoke flows (requires Maestro CLI)
 ```
+
+### E2E Smoke Flows
+
+- `e2e/maestro/smoke-auth-catalog.yaml` → auth + catalog/search
+- `e2e/maestro/smoke-detail-webview-profile.yaml` → detail + webview + profile
+
+Install Maestro CLI: `curl -Ls "https://get.maestro.mobile.dev" | bash`
 
 ---
 

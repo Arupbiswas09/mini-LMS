@@ -1,5 +1,5 @@
 import { useMemo, memo } from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 function hashCourseId(courseId: string): number {
@@ -14,9 +14,15 @@ export interface CurriculumListProps {
   courseId: string;
   lessonsCount: number;
   isEnrolled: boolean;
+  onLessonPress?: (lessonNum: number) => void;
 }
 
-function CurriculumListComponent({ courseId, lessonsCount, isEnrolled }: CurriculumListProps) {
+function CurriculumListComponent({
+  courseId,
+  lessonsCount,
+  isEnrolled,
+  onLessonPress,
+}: CurriculumListProps) {
   const rows = useMemo(() => {
     const seed = hashCourseId(courseId);
     const base = ['Introduction', 'Core concepts', 'Applied practice', 'Assessment', 'Next steps'];
@@ -55,7 +61,17 @@ function CurriculumListComponent({ courseId, lessonsCount, isEnrolled }: Curricu
                 {row.section}
               </Text>
             ) : null}
-            <View className="flex-row items-center py-2.5 border-b border-neutral-100 dark:border-neutral-800">
+            <Pressable
+              className="flex-row items-center py-2.5 border-b border-neutral-100 dark:border-neutral-800"
+              onPress={() => onLessonPress?.(row.lessonNum)}
+              accessibilityRole="button"
+              accessibilityLabel={`Lesson ${row.lessonNum}: ${row.section} part ${row.part}`}
+              accessibilityHint={
+                isEnrolled
+                  ? 'Opens this lesson in the content viewer'
+                  : 'This lesson is locked. Enroll to continue'
+              }
+            >
               <Ionicons name="play-circle-outline" size={18} color="#2563eb" />
               <View className="flex-1 ml-2">
                 <Text className="text-sm text-neutral-800 dark:text-neutral-200">
@@ -70,7 +86,7 @@ function CurriculumListComponent({ courseId, lessonsCount, isEnrolled }: Curricu
               ) : (
                 <Ionicons name="chevron-forward" size={16} color="#d1d5db" />
               )}
-            </View>
+            </Pressable>
           </View>
         );
       })}

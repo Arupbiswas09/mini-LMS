@@ -1,15 +1,36 @@
 import '../../global.css';
 import { useEffect } from 'react';
 import { SplashScreen, Slot } from 'expo-router';
+import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 import { useFonts } from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
+import * as Sentry from '@sentry/react-native';
 import { AppProviders } from '@/providers/AppProviders';
+import { useOfflineMode } from '@/hooks/useOfflineMode';
 import { useAuthStore } from '@/stores/authStore';
 import { useCourseStore } from '@/stores/courseStore';
 import { usePreferencesStore } from '@/stores/preferencesStore';
 import { notificationService } from '@/services/notificationService';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useAppState } from '@/hooks/useAppState';
+
+const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN?.trim();
+
+if (SENTRY_DSN) {
+  Sentry.init({
+    dsn: SENTRY_DSN,
+    enabled: !__DEV__,
+    release: `${Constants.expoConfig?.slug ?? 'mini-lms'}@${Constants.expoConfig?.version ?? '1.0.0'}`,
+    environment: __DEV__ ? 'development' : 'production',
+    tracesSampleRate: __DEV__ ? 1.0 : 0.2,
+  });
+
+  Sentry.setTags({
+    platform: Platform.OS,
+    appVersion: Constants.expoConfig?.version ?? '1.0.0',
+  });
+}
 
 SplashScreen.preventAutoHideAsync();
 
@@ -22,6 +43,7 @@ function AppShell() {
   // Native feature hooks — must be called once at the root
   useNotifications();
   useAppState();
+  useOfflineMode();
 
   const [fontsLoaded, fontError] = useFonts({
     // eslint-disable-next-line @typescript-eslint/no-require-imports

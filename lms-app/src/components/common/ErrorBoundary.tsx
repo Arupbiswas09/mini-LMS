@@ -1,6 +1,7 @@
 import React, { Component, type ErrorInfo, type ReactNode } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { router } from 'expo-router';
+import * as Sentry from '@sentry/react-native';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -28,6 +29,11 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     if (__DEV__) {
       console.error('[ErrorBoundary]', error, errorInfo.componentStack);
     }
+
+    Sentry.captureException(error, {
+      extra: { componentStack: errorInfo.componentStack },
+    });
+
     this.props.onError?.(error, errorInfo);
   }
 

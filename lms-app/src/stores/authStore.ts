@@ -4,6 +4,9 @@ import { devtools } from 'zustand/middleware';
 import { authService } from '@/services/authService';
 import { secureStorage } from '@/lib/storage/secureStorage';
 import { appStorage } from '@/lib/storage/appStorage';
+import { detectJailbreak } from '@/lib/security/jailbreakDetection';
+import { analyticsService } from '@/services/analyticsService';
+import { showToast } from '@/components/common/ToastManager';
 import { getUserFriendlyMessage } from '@/lib/api/errorHandler';
 import type { ApiError } from '@/types';
 import type { LoginCredentials, RegisterCredentials, User } from '@/types';
@@ -22,6 +25,7 @@ interface AuthState {
   isLoading: boolean;
   isRestoringSession: boolean;
   error: string | null;
+  securityNotice: string | null;
 }
 
 interface AuthActions {
@@ -33,6 +37,7 @@ interface AuthActions {
   updateUser: (partial: Partial<User>) => void;
   setError: (msg: string) => void;
   clearError: () => void;
+  clearSecurityNotice: () => void;
 }
 
 type AuthStore = AuthState & AuthActions;
@@ -45,6 +50,13 @@ export const useAuthStore = create<AuthStore>()(
       isLoading: false,
       isRestoringSession: true,
       error: null,
+      securityNotice: null,
+
+      clearSecurityNotice: () => {
+        set((state) => {
+          state.securityNotice = null;
+        });
+      },
 
       login: async (credentials) => {
         set((state) => {
@@ -52,12 +64,35 @@ export const useAuthStore = create<AuthStore>()(
           state.error = null;
         });
         try {
+          const security = await detectJailbreak();
+          if (security.riskLevel !== 'safe') {
+            const notice =
+              security.riskLevel === 'compromised'
+                ? 'Device security risk detected. Biometric sign-in has been disabled.'
+                : 'Device appears modified. Please use caution with sensitive actions.';
+            set((state) => {
+              state.securityNotice = notice;
+            });
+            showToast('warning', notice, 4500);
+
+            if (security.riskLevel === 'compromised') {
+              appStorage.setPreferences({ biometricEnabled: false });
+              await secureStorage.removeBiometricCredentials();
+            }
+          }
+
           const user = await authService.login(credentials);
           set((state) => {
             state.user = user;
             state.isAuthenticated = true;
             state.isLoading = false;
           });
+
+          await analyticsService.track('auth_login_success', {
+            userId: user._id,
+            email: user.email,
+          });
+
           const prefs = appStorage.getPreferences();
           if (prefs.biometricEnabled) {
             await secureStorage.setBiometricCredentials({
@@ -102,6 +137,11 @@ export const useAuthStore = create<AuthStore>()(
               password: credentials.password,
             });
           }
+
+          await analyticsService.track('auth_register_success', {
+            userId: user._id,
+            email: user.email,
+          });
         } catch (err) {
           const message = errorMessage(err);
           set((state) => {
@@ -117,6 +157,7 @@ export const useAuthStore = create<AuthStore>()(
           state.isLoading = true;
         });
         try {
+          await analyticsService.track('auth_logout');
           await authService.logout();
         } finally {
           set((state) => {
@@ -133,6 +174,22 @@ export const useAuthStore = create<AuthStore>()(
           state.isRestoringSession = true;
         });
         try {
+          const security = await detectJailbreak();
+          if (security.riskLevel !== 'safe') {
+            const notice =
+              security.riskLevel === 'compromised'
+                ? 'Device security risk detected. Biometric sign-in has been disabled.'
+                : 'Device appears modified. Please use caution with sensitive actions.';
+            set((state) => {
+              state.securityNotice = notice;
+            });
+
+            if (security.riskLevel === 'compromised') {
+              appStorage.setPreferences({ biometricEnabled: false });
+              await secureStorage.removeBiometricCredentials();
+            }
+          }
+
           const token = await secureStorage.getToken();
           if (!token) {
             set((state) => {

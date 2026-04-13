@@ -4,6 +4,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { queryClient, mmkvPersister } from '@/lib/queryClient';
 import { ThemeProvider } from '@/providers/ThemeProvider';
+import { ToastManager } from '@/components/common/ToastManager';
 import { usePreferencesStore } from '@/stores/preferencesStore';
 
 // ─── Theme context ────────────────────────────────────────────────────────────
@@ -63,6 +64,7 @@ export function AppProviders({ children }: AppProvidersProps) {
           <ThemeProvider>
             <ThemeContextBridge>
               {children}
+              <ToastManager />
             </ThemeContextBridge>
           </ThemeProvider>
         </PersistQueryClientProvider>

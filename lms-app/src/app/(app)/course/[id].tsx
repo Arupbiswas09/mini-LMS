@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Share,
+  Alert,
   LayoutAnimation,
   Platform,
   UIManager,
@@ -22,6 +23,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } 
 import { useCourse } from '@/hooks/useCourse';
 import { useCourseStore } from '@/stores/courseStore';
 import { queryClient, queryKeys } from '@/lib/queryClient';
+import { analyticsService } from '@/services/analyticsService';
 import { EnrollButton } from '@/components/course/EnrollButton';
 import { CurriculumList } from '@/components/course/CurriculumList';
 import { RatingStars } from '@/components/ui/RatingStars';
@@ -89,6 +91,29 @@ export default function CourseDetailScreen() {
     if (course) router.push(`/(app)/webview/${course.id}`);
   }, [course, router]);
 
+  const handleLessonPress = useCallback(
+    (lessonNum: number) => {
+      if (!course) return;
+      if (!enrolled) {
+        Alert.alert(
+          'Lesson locked',
+          'Please enroll first to open course lessons.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Enroll now',
+              onPress: () => enrollCourse(course.id),
+            },
+          ]
+        );
+        return;
+      }
+
+      router.push(`/(app)/webview/${course.id}?lesson=${lessonNum}`);
+    },
+    [course, enrolled, enrollCourse, router]
+  );
+
   const relatedCourses = useMemo(() => {
     if (!course) return [] as CourseWithInstructor[];
     const infiniteData = queryClient.getQueryData<{
@@ -99,6 +124,15 @@ export default function CourseDetailScreen() {
     return all
       .filter((c) => c.id !== course.id && c.category === course.category)
       .slice(0, 8);
+  }, [course]);
+
+  useEffect(() => {
+    if (!course) return;
+    void analyticsService.track('course_view', {
+      courseId: course.id,
+      category: course.category,
+      difficulty: course.difficulty,
+    });
   }, [course]);
 
   const toggleExpanded = useCallback(() => {
@@ -322,7 +356,12 @@ export default function CourseDetailScreen() {
             ))}
           </View>
 
-          <CurriculumList courseId={course.id} lessonsCount={safeLessonsCount} isEnrolled={enrolled} />
+          <CurriculumList
+            courseId={course.id}
+            lessonsCount={safeLessonsCount}
+            isEnrolled={enrolled}
+            onLessonPress={handleLessonPress}
+          />
 
           {relatedCourses.length > 0 ? (
             <View className="mt-8 mb-4">

@@ -27,17 +27,22 @@ jest.mock('@/lib/storage/secureStorage', () => ({
     setBiometricCredentials: jest.fn(),
     getBiometricCredentials: jest.fn(() => Promise.resolve(null)),
     clearBiometricCredentials: jest.fn(),
+    removeBiometricCredentials: jest.fn(),
   },
 }));
 jest.mock('@/lib/storage/appStorage', () => ({
   appStorage: {
     getPreferences: jest.fn(() => ({ biometricEnabled: false })),
+    setPreferences: jest.fn(),
     getBookmarks: jest.fn(() => new Set()),
     getEnrolledCourses: jest.fn(() => new Set()),
     setBookmarks: jest.fn(),
     setEnrolledCourses: jest.fn(),
     clear: jest.fn(),
   },
+}));
+jest.mock('@/lib/security/jailbreakDetection', () => ({
+  detectJailbreak: jest.fn(async () => ({ riskLevel: 'safe', indicators: [] })),
 }));
 
 const mockAuthService = authService as jest.Mocked<typeof authService>;

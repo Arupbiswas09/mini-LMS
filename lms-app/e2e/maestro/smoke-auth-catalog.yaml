@@ -1,0 +1,13 @@
+appId: com.minilms.app
+---
+- launchApp
+- tapOn: "Email"
+- inputText: "test.user@example.com"
+- tapOn: "Password"
+- inputText: "TestPassword1!"
+- tapOn: "Sign in"
+- assertVisible: "Discover Courses"
+- assertVisible: "courses available"
+- tapOn: "Open search"
+- inputText: "iphone"
+- assertVisible: "iPhone"

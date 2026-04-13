@@ -71,6 +71,11 @@ jest.mock('expo-local-authentication', () => ({
   AuthenticationType: { FINGERPRINT: 1, FACIAL_RECOGNITION: 2, IRIS: 3 },
 }));
 
+// ─── Expo Web Browser ────────────────────────────────────────────────────────
+jest.mock('expo-web-browser', () => ({
+  openBrowserAsync: jest.fn(() => Promise.resolve({ type: 'opened' })),
+}));
+
 // ─── Reanimated ───────────────────────────────────────────────────────────────
 jest.mock('react-native-reanimated', () => {
   const Reanimated = require('react-native-reanimated/mock');

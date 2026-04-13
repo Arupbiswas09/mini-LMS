@@ -1,12 +1,13 @@
 import axios, { type AxiosInstance, type InternalAxiosRequestConfig, type AxiosResponse } from 'axios';
 import axiosRetry from 'axios-retry';
 import { BASE_URL, REQUEST_TIMEOUT } from '@/constants/api';
+import { isTokenExpired } from '@/lib/security';
 import { secureStorage } from '@/lib/storage/secureStorage';
+import { refreshAccessTokenWithDeps, type RefreshLifecycleDeps } from './refreshLifecycle';
 import { normalizeError } from './errorHandler';
 
 let navigateToLogin: (() => void) | null = null;
-let isRefreshing = false;
-let refreshQueue: Array<(token: string) => void> = [];
+let refreshPromise: Promise<string | null> | null = null;
 
 export function setNavigationHandler(handler: () => void): void {
   navigateToLogin = handler;
@@ -20,6 +21,35 @@ const apiClient: AxiosInstance = axios.create({
     Accept: 'application/json',
   },
 });
+
+export type { RefreshLifecycleDeps };
+export { refreshAccessTokenWithDeps };
+
+async function refreshAccessToken(): Promise<string | null> {
+  if (!refreshPromise) {
+    refreshPromise = refreshAccessTokenWithDeps({
+      getRefreshToken: () => secureStorage.getRefreshToken(),
+      setToken: (token) => secureStorage.setToken(token),
+      setRefreshToken: (token) => secureStorage.setRefreshToken(token),
+      clearAll: () => secureStorage.clearAll(),
+      requestRefresh: async (refreshToken) => {
+        const resp = await axios.post<{ data: { accessToken: string; refreshToken: string } }>(
+          `${BASE_URL}/api/v1/users/refresh-token`,
+          { refreshToken }
+        );
+        return {
+          accessToken: resp.data.data.accessToken,
+          refreshToken: resp.data.data.refreshToken,
+        };
+      },
+      onAuthFailure: () => navigateToLogin?.(),
+    }).finally(() => {
+      refreshPromise = null;
+    });
+  }
+
+  return refreshPromise;
+}
 
 axiosRetry(apiClient, {
   retries: 3,
@@ -36,9 +66,17 @@ axiosRetry(apiClient, {
 
 apiClient.interceptors.request.use(
   async (config: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> => {
-    const token = await secureStorage.getToken();
+    let token = await secureStorage.getToken();
+
+    // Proactively refresh access token before it expires to reduce failed requests.
+    if (token && isTokenExpired(token)) {
+      token = await refreshAccessToken();
+    }
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    } else if ('Authorization' in config.headers) {
+      delete config.headers.Authorization;
     }
     config.headers['X-Request-ID'] = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     config.headers['X-Platform'] = 'react-native';
@@ -66,42 +104,10 @@ apiClient.interceptors.response.use(
     if (axiosError.response?.status === 401 && originalConfig && !originalConfig._retry) {
       originalConfig._retry = true;
 
-      // If a refresh is already in-flight, queue this request
-      if (isRefreshing) {
-        return new Promise<AxiosResponse>((resolve) => {
-          refreshQueue.push((token: string) => {
-            originalConfig.headers.Authorization = `Bearer ${token}`;
-            resolve(apiClient(originalConfig));
-          });
-        });
-      }
-
-      isRefreshing = true;
-      try {
-        const refreshToken = await secureStorage.getRefreshToken();
-        if (!refreshToken) throw new Error('No refresh token');
-
-        const resp = await axios.post<{ data: { accessToken: string; refreshToken: string } }>(
-          `${BASE_URL}/api/v1/users/refresh-token`,
-          { refreshToken }
-        );
-        const { accessToken, refreshToken: newRefreshToken } = resp.data.data;
-        await secureStorage.setToken(accessToken);
-        await secureStorage.setRefreshToken(newRefreshToken);
-
-        // Drain the queue
-        refreshQueue.forEach((cb) => cb(accessToken));
-        refreshQueue = [];
-
-        originalConfig.headers.Authorization = `Bearer ${accessToken}`;
+      const token = await refreshAccessToken();
+      if (token) {
+        originalConfig.headers.Authorization = `Bearer ${token}`;
         return apiClient(originalConfig);
-      } catch {
-        // Refresh failed — log out
-        refreshQueue = [];
-        await secureStorage.clearAll();
-        navigateToLogin?.();
-      } finally {
-        isRefreshing = false;
       }
     }
 

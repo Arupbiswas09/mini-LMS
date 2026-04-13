@@ -74,6 +74,20 @@ export default function CoursesCatalogScreen() {
     return result;
   }, [allCourses, activeFilter, debouncedSearch]);
 
+  const isFilterFallback = useMemo(
+    () =>
+      allCourses.length > 0 &&
+      activeFilter !== 'All' &&
+      !debouncedSearch.trim() &&
+      filteredCourses.length === 0,
+    [allCourses.length, activeFilter, debouncedSearch, filteredCourses.length]
+  );
+
+  const visibleCourses = useMemo(
+    () => (isFilterFallback ? allCourses : filteredCourses),
+    [isFilterFallback, allCourses, filteredCourses]
+  );
+
   const searchAnimatedStyle = useAnimatedStyle(() => ({
     height: searchBarHeight.value,
     overflow: 'hidden',
@@ -265,6 +279,14 @@ export default function CoursesCatalogScreen() {
             ))}
           </ScrollView>
         </View>
+
+        {isFilterFallback ? (
+          <View className="mx-1 mt-2 rounded-xl bg-warning-100 dark:bg-amber-900/30 px-3 py-2">
+            <Text className="text-xs font-medium text-amber-800 dark:text-amber-200">
+              No {activeFilter} courses in current API response. Showing all courses.
+            </Text>
+          </View>
+        ) : null}
       </View>
     ),
     [
@@ -279,6 +301,7 @@ export default function CoursesCatalogScreen() {
       searchInput,
       searchVisible,
       setFilter,
+      isFilterFallback,
     ]
   );
 
@@ -290,7 +313,7 @@ export default function CoursesCatalogScreen() {
         </View>
       );
     }
-    if (!hasNextPage && filteredCourses.length > 0) {
+    if (!hasNextPage && visibleCourses.length > 0) {
       return (
         <Text className="text-center text-neutral-400 dark:text-neutral-600 py-6 text-sm">
           No more courses to load
@@ -298,7 +321,7 @@ export default function CoursesCatalogScreen() {
       );
     }
     return <View className="h-4" />;
-  }, [isFetchingNextPage, hasNextPage, filteredCourses.length]);
+  }, [isFetchingNextPage, hasNextPage, visibleCourses.length]);
 
   const ListEmpty = useCallback(
     () => {
@@ -381,7 +404,7 @@ export default function CoursesCatalogScreen() {
     <SafeAreaView className="flex-1 bg-white dark:bg-neutral-900" edges={['top']}>
       <OfflineBanner />
       <LegendList
-        data={filteredCourses}
+        data={visibleCourses}
         keyExtractor={keyExtractor}
         renderItem={renderItem}
         estimatedItemSize={180}
@@ -404,7 +427,7 @@ export default function CoursesCatalogScreen() {
         }
         contentContainerStyle={[
           { paddingHorizontal: 16, paddingBottom: 32, paddingTop: 8 },
-          filteredCourses.length === 0 ? { flexGrow: 1 } : null,
+          visibleCourses.length === 0 ? { flexGrow: 1 } : null,
         ]}
         recycleItems={false}
       />

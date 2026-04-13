@@ -1,0 +1,14 @@
+appId: com.minilms.app
+---
+- launchApp
+- assertVisible: "Discover Courses"
+- tapOn:
+    id: "course-card-0"
+    optional: true
+- tapOn: "Enroll now"
+- assertVisible: "Curriculum"
+- tapOn: "Open course in WebView"
+- assertVisible: "Go back"
+- tapOn: "Go back"
+- tapOn: "Profile"
+- assertVisible: "Edit profile"

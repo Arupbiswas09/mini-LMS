@@ -3,6 +3,7 @@ import { immer } from 'zustand/middleware/immer';
 import { devtools } from 'zustand/middleware';
 import { enableMapSet } from 'immer';
 import { appStorage } from '@/lib/storage/appStorage';
+import { analyticsService } from '@/services/analyticsService';
 import { notificationService } from '@/services/notificationService';
 
 enableMapSet();
@@ -44,11 +45,14 @@ export const useCourseStore = create<CourseStore>()(
       activeFilter: 'All',
 
       toggleBookmark: (courseId) => {
+        let bookmarked = false;
         set((state) => {
           if (state.bookmarks.has(courseId)) {
             state.bookmarks.delete(courseId);
+            bookmarked = false;
           } else {
             state.bookmarks.add(courseId);
+            bookmarked = true;
           }
         });
 
@@ -59,6 +63,12 @@ export const useCourseStore = create<CourseStore>()(
         if (count > 0 && count % 5 === 0) {
           void notificationService.scheduleBookmarkMilestone(count);
         }
+
+        void analyticsService.track('course_bookmark_toggled', {
+          courseId,
+          bookmarked,
+          bookmarkCount: count,
+        });
       },
 
       enrollCourse: (courseId) => {
@@ -66,6 +76,11 @@ export const useCourseStore = create<CourseStore>()(
           state.enrolledCourses.add(courseId);
         });
         appStorage.setEnrolledCourses(get().enrolledCourses);
+
+        void analyticsService.track('course_enroll', {
+          courseId,
+          enrolledCount: get().enrolledCourses.size,
+        });
       },
 
       setSearchQuery: (query) => {
