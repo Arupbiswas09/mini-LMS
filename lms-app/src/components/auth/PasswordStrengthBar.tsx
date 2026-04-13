@@ -22,11 +22,11 @@ function getPasswordStrength(password: string): { score: number; label: string }
 }
 
 export interface PasswordStrengthBarProps {
-  password: string;
+  password?: string;
 }
 
 export function PasswordStrengthBar({ password }: PasswordStrengthBarProps) {
-  const { score, label } = getPasswordStrength(password);
+  const { score, label } = getPasswordStrength(password ?? '');
   const progress = useSharedValue(0);
 
   useEffect(() => {

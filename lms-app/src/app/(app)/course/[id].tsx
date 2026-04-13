@@ -161,6 +161,13 @@ export default function CourseDetailScreen() {
 
   const heroTop = insets.top + 8;
   const scrollBottomPad = 140 + Math.max(insets.bottom, 20);
+  const safeRating = Number.isFinite(Number(course.rating)) ? Number(course.rating) : 0;
+  const safeRatingCount = Number.isFinite(Number(course.ratingCount)) ? Number(course.ratingCount) : 0;
+  const safeEnrollmentCount = Number.isFinite(Number(course.enrollmentCount))
+    ? Number(course.enrollmentCount)
+    : 0;
+  const safeDuration = Number.isFinite(Number(course.duration)) ? Number(course.duration) : 0;
+  const safeLessonsCount = Number.isFinite(Number(course.lessonsCount)) ? Number(course.lessonsCount) : 0;
 
   return (
     <View className="flex-1 bg-white dark:bg-neutral-900">
@@ -238,14 +245,14 @@ export default function CourseDetailScreen() {
             <Text className="text-2xl font-bold text-white">{course.title}</Text>
             <View className="flex-row items-center mt-2 flex-wrap">
               <RatingStars
-                rating={course.rating}
+                rating={safeRating}
                 size={14}
                 starColor="#fcd34d"
                 emptyStarColor="rgba(255,255,255,0.45)"
               />
               <Text className="text-white/90 text-sm ml-2">
-                {course.rating.toFixed(1)} · {course.ratingCount.toLocaleString()} reviews ·{' '}
-                {course.enrollmentCount.toLocaleString()} students
+                {safeRating.toFixed(1)} · {safeRatingCount.toLocaleString()} reviews ·{' '}
+                {safeEnrollmentCount.toLocaleString()} students
               </Text>
             </View>
           </View>
@@ -300,8 +307,8 @@ export default function CourseDetailScreen() {
 
           <View className="flex-row flex-wrap mt-5 gap-3">
             {[
-              { icon: 'time-outline' as const, label: `${course.duration}h total` },
-              { icon: 'library-outline' as const, label: `${course.lessonsCount} lessons` },
+              { icon: 'time-outline' as const, label: `${safeDuration}h total` },
+              { icon: 'library-outline' as const, label: `${safeLessonsCount} lessons` },
               { icon: 'globe-outline' as const, label: course.language },
               { icon: 'cellular-outline' as const, label: course.difficulty },
             ].map((stat) => (
@@ -315,7 +322,7 @@ export default function CourseDetailScreen() {
             ))}
           </View>
 
-          <CurriculumList courseId={course.id} lessonsCount={course.lessonsCount} isEnrolled={enrolled} />
+          <CurriculumList courseId={course.id} lessonsCount={safeLessonsCount} isEnrolled={enrolled} />
 
           {relatedCourses.length > 0 ? (
             <View className="mt-8 mb-4">

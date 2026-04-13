@@ -44,7 +44,7 @@ export default function CourseWebViewScreen() {
   const [requestHeaders, setRequestHeaders] = useState<Record<string, string>>({});
 
   const { data: course, isPending, isError, error, refetch } = useCourse(id);
-  const { toggleBookmark, isBookmarked, isEnrolled } = useCourseStore();
+  const { toggleBookmark, enrollCourse, isBookmarked, isEnrolled } = useCourseStore();
   const { isDarkMode } = usePreferencesStore();
   const user = useAuthStore((s) => s.user);
 
@@ -79,6 +79,11 @@ export default function CourseWebViewScreen() {
     courseId: course?.id ?? null,
     onBookmarkToggle: () => {
       if (course) toggleBookmark(course.id);
+    },
+    onEnrollCourse: () => {
+      if (course && !enrolled) {
+        enrollCourse(course.id);
+      }
     },
     onShareCourse: () => {
       void shareCourseNative();

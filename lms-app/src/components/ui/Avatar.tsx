@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { View, Text } from 'react-native';
 import { Image } from 'expo-image';
 
@@ -26,8 +27,13 @@ export function Avatar({
   const dim = sizeMap[size];
   const fontSize = size === 'sm' ? 12 : size === 'md' ? 16 : size === 'lg' ? 24 : 32;
   const displayInitials = initials.slice(0, 2).toUpperCase();
+  const [imageFailed, setImageFailed] = useState(false);
 
-  if (uri) {
+  useEffect(() => {
+    setImageFailed(false);
+  }, [uri]);
+
+  if (uri && !imageFailed) {
     return (
       <Image
         source={{ uri }}
@@ -35,6 +41,7 @@ export function Avatar({
         contentFit="cover"
         transition={200}
         placeholder={{ blurhash: 'L6PZfSi_.AyE_3t7t7R**0o#DgR4' }}
+        onError={() => setImageFailed(true)}
         accessibilityLabel={accessibilityLabel}
       />
     );

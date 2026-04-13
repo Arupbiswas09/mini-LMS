@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useMemo } from 'react';
+import React, { memo, useCallback, useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity, Pressable } from 'react-native';
 import { Image } from 'expo-image';
 import Animated, {
@@ -74,6 +74,8 @@ function CourseCardComponent({
 }: CourseCardProps) {
   const scale = useSharedValue(1);
   const heartScale = useSharedValue(1);
+  const [thumbnailFailed, setThumbnailFailed] = useState(false);
+  const [instructorAvatarFailed, setInstructorAvatarFailed] = useState(false);
 
   const cardStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -132,16 +134,25 @@ function CourseCardComponent({
           accessibilityHint="Double-tap to open. Long-press to preload."
         >
           <View className="relative">
-            {/* force-cache: thumbnail is immutable per course — no need to ever re-fetch */}
-            <Image
-              source={{ uri: course.thumbnail }}
-              style={{ width: '100%', aspectRatio: 16 / 9 }}
-              contentFit="cover"
-              transition={300}
-              placeholder={{ blurhash: 'L6PZfSi_.AyE_3t7t7R**0o#DgR4' }}
-              cachePolicy="disk"
-              accessibilityLabel={`${course.title} thumbnail`}
-            />
+            {thumbnailFailed ? (
+              <View className="w-full" style={{ aspectRatio: 16 / 9, backgroundColor: '#e5e7eb' }}>
+                <View className="flex-1 items-center justify-center">
+                  <Ionicons name="image-outline" size={28} color="#9ca3af" />
+                  <Text className="mt-1 text-xs text-neutral-500">Image unavailable</Text>
+                </View>
+              </View>
+            ) : (
+              <Image
+                source={{ uri: course.thumbnail }}
+                style={{ width: '100%', aspectRatio: 16 / 9 }}
+                contentFit="cover"
+                transition={300}
+                placeholder={{ blurhash: 'L6PZfSi_.AyE_3t7t7R**0o#DgR4' }}
+                cachePolicy="disk"
+                onError={() => setThumbnailFailed(true)}
+                accessibilityLabel={`${course.title} thumbnail`}
+              />
+            )}
             <View className="absolute top-2 left-2 bg-primary-600/90 px-2.5 py-1 rounded-full">
               <Text className="text-white text-xs font-semibold">{course.category}</Text>
             </View>
@@ -157,11 +168,20 @@ function CourseCardComponent({
 
             {course.instructor ? (
               <View className="flex-row items-center mt-2">
-                <Image
-                  source={{ uri: course.instructor.avatar }}
-                  style={{ width: 20, height: 20, borderRadius: 10 }}
-                  contentFit="cover"
-                />
+                {instructorAvatarFailed ? (
+                  <View className="w-5 h-5 rounded-full bg-neutral-300 dark:bg-neutral-600 items-center justify-center">
+                    <Text className="text-[10px] text-neutral-700 dark:text-neutral-200 font-semibold">
+                      {course.instructor.name.slice(0, 1).toUpperCase()}
+                    </Text>
+                  </View>
+                ) : (
+                  <Image
+                    source={{ uri: course.instructor.avatar }}
+                    style={{ width: 20, height: 20, borderRadius: 10 }}
+                    contentFit="cover"
+                    onError={() => setInstructorAvatarFailed(true)}
+                  />
+                )}
                 <Text className="text-xs text-neutral-500 dark:text-neutral-400 ml-1.5" numberOfLines={1}>
                   {course.instructor.name}
                 </Text>

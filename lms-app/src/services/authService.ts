@@ -3,6 +3,32 @@ import { secureStorage } from '@/lib/storage/secureStorage';
 import { queryClient } from '@/lib/queryClient';
 import type { ApiResponse, AuthTokens, LoginCredentials, RegisterCredentials, User } from '@/types';
 
+type UserLike = User | { user?: User } | { data?: User | { user?: User } } | null | undefined;
+
+function extractUser(payload: UserLike): User {
+  const direct = payload as User | undefined;
+  if (direct && typeof direct === 'object' && '_id' in direct) {
+    return direct;
+  }
+
+  const nestedUser = (payload as { user?: User } | undefined)?.user;
+  if (nestedUser && typeof nestedUser === 'object' && '_id' in nestedUser) {
+    return nestedUser;
+  }
+
+  const dataNode = (payload as { data?: User | { user?: User } } | undefined)?.data;
+  if (dataNode && typeof dataNode === 'object' && '_id' in dataNode) {
+    return dataNode;
+  }
+
+  const dataUser = (dataNode as { user?: User } | undefined)?.user;
+  if (dataUser && typeof dataUser === 'object' && '_id' in dataUser) {
+    return dataUser;
+  }
+
+  throw new Error('Invalid user response shape');
+}
+
 interface LoginResponse {
   user: User;
   accessToken: string;
@@ -52,13 +78,16 @@ export const authService = {
   },
 
   async getMe(): Promise<User> {
-    const response = await get<ApiResponse<{ user: User }>>('/api/v1/users/current-user');
-    return response.data.user;
+    const response = await get<ApiResponse<{ user: User }> | User | { user: User }>('/api/v1/users/current-user');
+    return extractUser(response as UserLike);
   },
 
   async updateProfile(data: { username?: string }): Promise<User> {
-    const response = await patch<ApiResponse<{ user: User }>>('/api/v1/users/update-account', data);
-    return response.data.user;
+    const response = await patch<ApiResponse<{ user: User }> | User | { user: User }>(
+      '/api/v1/users/update-account',
+      data
+    );
+    return extractUser(response as UserLike);
   },
 
   async updateAvatar(uri: string): Promise<User> {
@@ -73,7 +102,10 @@ export const authService = {
       type: mimeType,
     } as unknown as Blob);
 
-    const response = await patch<ApiResponse<{ user: User }>>('/api/v1/users/avatar', formData);
-    return response.data.user;
+    const response = await patch<ApiResponse<{ user: User }> | User | { user: User }>(
+      '/api/v1/users/avatar',
+      formData
+    );
+    return extractUser(response as UserLike);
   },
 } as const;

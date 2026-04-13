@@ -13,6 +13,7 @@ export interface WebViewBridgeMessage {
 export interface UseWebViewBridgeParams {
   courseId: string | null;
   onBookmarkToggle: () => void;
+  onEnrollCourse: () => void;
   onShareCourse: () => void;
 }
 
@@ -23,7 +24,12 @@ function injectNativeMessage(webViewRef: RefObject<WebView | null>, message: Web
   );
 }
 
-export function useWebViewBridge({ courseId, onBookmarkToggle, onShareCourse }: UseWebViewBridgeParams) {
+export function useWebViewBridge({
+  courseId,
+  onBookmarkToggle,
+  onEnrollCourse,
+  onShareCourse,
+}: UseWebViewBridgeParams) {
   const webViewRef = useRef<WebView>(null);
 
   const injectTheme = useCallback(
@@ -57,6 +63,9 @@ export function useWebViewBridge({ courseId, onBookmarkToggle, onShareCourse }: 
           case 'BOOKMARK_TOGGLE':
             onBookmarkToggle();
             break;
+          case 'ENROLL_COURSE':
+            onEnrollCourse();
+            break;
           case 'SHARE_COURSE':
             onShareCourse();
             break;
@@ -83,7 +92,7 @@ export function useWebViewBridge({ courseId, onBookmarkToggle, onShareCourse }: 
         // malformed JSON from web
       }
     },
-    [courseId, onBookmarkToggle, onShareCourse]
+    [courseId, onBookmarkToggle, onEnrollCourse, onShareCourse]
   );
 
   return {

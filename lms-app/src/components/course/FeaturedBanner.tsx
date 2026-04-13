@@ -27,6 +27,7 @@ function FeaturedBannerComponent({ courses }: FeaturedBannerProps) {
   const scrollRef = useRef<ScrollView>(null);
   const indexRef = useRef(0);
   const [dotIndex, setDotIndex] = useState(0);
+  const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const featured = courses.slice(0, 3);
 
@@ -102,13 +103,20 @@ function FeaturedBannerComponent({ courses }: FeaturedBannerProps) {
             accessibilityLabel={`Featured: ${course.title}`}
           >
             <View className="rounded-2xl overflow-hidden bg-neutral-900" style={{ width: cardW, height: 160 }}>
-              <Image
-                source={{ uri: course.thumbnail }}
-                style={{ width: '100%', height: '100%' }}
-                contentFit="cover"
-                transition={200}
-                placeholder={{ blurhash: 'L6PZfSi_.AyE_3t7t7R**0o#DgR4' }}
-              />
+              {failedImages[course.id] ? (
+                <View className="w-full h-full bg-neutral-700 items-center justify-center">
+                  <Text className="text-neutral-300 text-xs">Image unavailable</Text>
+                </View>
+              ) : (
+                <Image
+                  source={{ uri: course.thumbnail }}
+                  style={{ width: '100%', height: '100%' }}
+                  contentFit="cover"
+                  transition={200}
+                  placeholder={{ blurhash: 'L6PZfSi_.AyE_3t7t7R**0o#DgR4' }}
+                  onError={() => setFailedImages((prev) => ({ ...prev, [course.id]: true }))}
+                />
+              )}
               <View className="absolute inset-0 bg-black/35" />
               <View className="absolute bottom-0 left-0 right-0 p-3">
                 <View className="self-start bg-primary-600/90 px-2 py-0.5 rounded-full mb-1">

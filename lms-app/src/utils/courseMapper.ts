@@ -44,26 +44,33 @@ export function deriveEnrollmentCount(ratingCount: number, productId: number): n
 }
 
 export function mapProductToCourse(product: RandomProduct): Course {
-  const category = product.category.toLowerCase();
+  const rawCategory = typeof product.category === 'string' ? product.category : 'general';
+  const category = rawCategory.toLowerCase();
   const displayCategory = CATEGORY_DISPLAY_MAP[category] ?? category;
   const difficulty = CATEGORY_DIFFICULTY_MAP[category] ?? 'Intermediate';
-  const title = product.name ?? product.title;
+  const title = (product.name ?? product.title ?? 'Untitled Course').trim() || 'Untitled Course';
+  const price = Number.isFinite(Number(product.price)) ? Number(product.price) : 0;
+  const ratingRate = Number.isFinite(Number(product.rating?.rate)) ? Number(product.rating.rate) : 0;
+  const ratingCount = Number.isFinite(Number(product.rating?.count)) ? Number(product.rating.count) : 0;
+  const productId = Number.isFinite(Number(product.id)) ? Number(product.id) : 0;
+  const description = typeof product.description === 'string' ? product.description : 'No description available.';
+  const thumbnail = typeof product.image === 'string' ? product.image : '';
 
   return {
-    id: String(product.id),
+    id: String(productId),
     title,
-    description: product.description,
-    price: product.price,
-    thumbnail: product.image,
+    description,
+    price,
+    thumbnail,
     category: displayCategory,
-    rating: product.rating.rate,
-    ratingCount: product.rating.count,
-    duration: deriveDuration(product.price),
+    rating: ratingRate,
+    ratingCount,
+    duration: deriveDuration(price),
     difficulty,
-    instructorId: String(product.id % 10),
-    lessonsCount: deriveLessonsCount(product.price),
+    instructorId: String(productId % 10),
+    lessonsCount: deriveLessonsCount(price),
     language: 'English',
-    enrollmentCount: deriveEnrollmentCount(product.rating.count, product.id),
+    enrollmentCount: deriveEnrollmentCount(ratingCount, productId),
     tags: [displayCategory, difficulty, 'Online'],
   };
 }

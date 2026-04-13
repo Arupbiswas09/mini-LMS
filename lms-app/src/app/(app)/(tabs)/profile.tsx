@@ -43,7 +43,7 @@ export default function ProfileScreen() {
   const biometricEnabled = usePreferencesStore((s) => s.biometricEnabled);
   const setBiometricEnabled = usePreferencesStore((s) => s.setBiometricEnabled);
 
-  const [bootstrapDone, setBootstrapDone] = useState(false);
+  const [bootstrapDone, setBootstrapDone] = useState(Boolean(user));
   const [refreshing, setRefreshing] = useState(false);
   const [avatarBusy, setAvatarBusy] = useState(false);
   const [usernameBusy, setUsernameBusy] = useState(false);
@@ -53,8 +53,11 @@ export default function ProfileScreen() {
   useEffect(() => {
     let active = true;
     void (async () => {
-      await refreshUser();
-      if (active) setBootstrapDone(true);
+      try {
+        await refreshUser();
+      } finally {
+        if (active) setBootstrapDone(true);
+      }
     })();
     return () => {
       active = false;
@@ -173,7 +176,7 @@ export default function ProfileScreen() {
     [setBiometricEnabled]
   );
 
-  if (!bootstrapDone || !user) {
+  if (!bootstrapDone && !user) {
     return (
       <SafeAreaView className="flex-1 bg-white dark:bg-neutral-900 px-5 pt-6" edges={['top']}>
         <SkeletonLoader variant="avatar" className="self-center mb-4" />
@@ -187,6 +190,37 @@ export default function ProfileScreen() {
         <SkeletonLoader variant="listItem" className="mb-3" />
         <SkeletonLoader variant="listItem" className="mb-3" />
         <SkeletonLoader variant="listItem" />
+      </SafeAreaView>
+    );
+  }
+
+  if (!user) {
+    return (
+      <SafeAreaView className="flex-1 bg-white dark:bg-neutral-900 px-5 pt-6" edges={['top']}>
+        <View className="rounded-2xl border border-neutral-200 dark:border-neutral-700 p-5">
+          <Text className="text-lg font-semibold text-neutral-900 dark:text-white">Could not load profile</Text>
+          <Text className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
+            Please refresh your session or sign in again.
+          </Text>
+          <View className="flex-row mt-4 gap-3">
+            <TouchableOpacity
+              className="px-4 py-2 rounded-lg bg-primary-600"
+              onPress={() => void onRefresh()}
+              accessibilityRole="button"
+              accessibilityLabel="Retry loading profile"
+            >
+              <Text className="text-white font-medium">Retry</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              className="px-4 py-2 rounded-lg bg-neutral-200 dark:bg-neutral-700"
+              onPress={handleLogout}
+              accessibilityRole="button"
+              accessibilityLabel="Sign out"
+            >
+              <Text className="text-neutral-900 dark:text-white font-medium">Sign out</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </SafeAreaView>
     );
   }

@@ -19,13 +19,14 @@ function generateStars(rating: number): string {
 
 function generateMockCurriculum(course: CourseWithInstructor, isEnrolled: boolean): string {
   const sections = ['Introduction', 'Core Concepts', 'Advanced Topics', 'Projects & Practice', 'Conclusion'];
-  const lessonsPerSection = Math.ceil(course.lessonsCount / sections.length);
+  const safeLessonsCount = Number.isFinite(Number(course.lessonsCount)) ? Number(course.lessonsCount) : 0;
+  const lessonsPerSection = Math.max(1, Math.ceil(safeLessonsCount / sections.length));
 
   return sections
     .map((section, sIdx) => {
       const lessons = Array.from({ length: lessonsPerSection }, (_, lIdx) => {
         const lessonNum = sIdx * lessonsPerSection + lIdx + 1;
-        if (lessonNum > course.lessonsCount) return '';
+        if (lessonNum > safeLessonsCount) return '';
         const duration = ((lessonNum * 13 + sIdx * 7) % 12) + 5;
         return `
           <div class="lesson-item" data-lesson="lesson_${lessonNum}" onclick="onLessonRowTap('lesson_${lessonNum}')">
@@ -54,6 +55,14 @@ export function generateCourseHTML(
   isDark: boolean,
   userName: string
 ): string {
+  const safeRating = Number.isFinite(Number(course.rating)) ? Number(course.rating) : 0;
+  const safeDuration = Number.isFinite(Number(course.duration)) ? Number(course.duration) : 0;
+  const safeLessonsCount = Number.isFinite(Number(course.lessonsCount)) ? Number(course.lessonsCount) : 0;
+  const safeEnrollmentCount = Number.isFinite(Number(course.enrollmentCount))
+    ? Number(course.enrollmentCount)
+    : 0;
+  const safePrice = Number.isFinite(Number(course.price)) ? Number(course.price) : 0;
+  const safeTags = Array.isArray(course.tags) ? course.tags : [];
   const curriculum = generateMockCurriculum(course, isEnrolled);
   const instructorName = course.instructor?.name ?? 'Unknown Instructor';
   const instructorBio = course.instructor?.bio ?? '';
@@ -286,10 +295,10 @@ export function generateCourseHTML(
   <p class="hero-user" id="lmsHeroUser"></p>
   <h1>${escapeHtml(course.title)}</h1>
   <div class="hero-meta">
-    <span><span class="rating">${generateStars(course.rating)}</span> ${course.rating.toFixed(1)}</span>
-    <span>⏱ ${course.duration}h</span>
-    <span>📚 ${course.lessonsCount} lessons</span>
-    <span>👥 ${course.enrollmentCount.toLocaleString()} students</span>
+    <span><span class="rating">${generateStars(safeRating)}</span> ${safeRating.toFixed(1)}</span>
+    <span>⏱ ${safeDuration}h</span>
+    <span>📚 ${safeLessonsCount} lessons</span>
+    <span>👥 ${safeEnrollmentCount.toLocaleString()} students</span>
   </div>
 </div>
 
@@ -310,11 +319,11 @@ export function generateCourseHTML(
   <div class="section-title">Course Overview</div>
   <div class="stats-grid">
     <div class="stat-card">
-      <div class="stat-value">${course.duration}h</div>
+      <div class="stat-value">${safeDuration}h</div>
       <div class="stat-label">Duration</div>
     </div>
     <div class="stat-card">
-      <div class="stat-value">${course.lessonsCount}</div>
+      <div class="stat-value">${safeLessonsCount}</div>
       <div class="stat-label">Lessons</div>
     </div>
     <div class="stat-card">
@@ -322,7 +331,7 @@ export function generateCourseHTML(
       <div class="stat-label">${escapeHtml(course.difficulty)}</div>
     </div>
     <div class="stat-card">
-      <div class="stat-value">$${course.price.toFixed(0)}</div>
+      <div class="stat-value">$${safePrice.toFixed(0)}</div>
       <div class="stat-label">Price</div>
     </div>
   </div>
@@ -332,7 +341,7 @@ export function generateCourseHTML(
   <div class="section-title">About This Course</div>
   <p class="description-text">${escapeHtml(course.description)}</p>
   <div style="margin-top:12px">
-    ${course.tags.map((tag) => `<span class="tag-chip">${escapeHtml(tag)}</span>`).join('')}
+    ${safeTags.map((tag) => `<span class="tag-chip">${escapeHtml(tag)}</span>`).join('')}
   </div>
 </div>
 
@@ -341,7 +350,7 @@ export function generateCourseHTML(
   <div class="progress-bar-bg">
     <div class="progress-bar-fill" id="progressFill"></div>
   </div>
-  <div class="progress-label" id="progressLabel">0 / ${course.lessonsCount} lessons completed</div>
+  <div class="progress-label" id="progressLabel">0 / ${safeLessonsCount} lessons completed</div>
 </div>
 
 <div class="section-container section-anim" style="padding-top:0;padding-bottom:100px">
@@ -353,7 +362,7 @@ export function generateCourseHTML(
 </div>
 
 <div class="action-bar">
-  <button id="primaryActionBtn" class="btn btn-primary" type="button" onclick="toggleBookmark()">
+  <button id="primaryActionBtn" class="btn btn-primary" type="button" onclick="handlePrimaryAction()">
     ${isEnrolled ? '▶ Continue Learning' : '+ Enroll Now'}
   </button>
   <button class="btn btn-secondary" type="button" onclick="shareCourse()">Share</button>
@@ -362,7 +371,7 @@ export function generateCourseHTML(
 <script>
   (function() {
     var completedLessons = new Set();
-    var totalLessons = ${course.lessonsCount};
+    var totalLessons = ${safeLessonsCount};
     window.__LMS_ENROLLED = ${JSON.stringify(!!isEnrolled)};
 
     function postToNative(type, payload) {
@@ -429,10 +438,19 @@ export function generateCourseHTML(
       if (label) label.textContent = count + ' / ' + totalLessons + ' lessons completed';
     }
 
-    function toggleBookmark() {
-      postToNative('BOOKMARK_TOGGLE', {});
+    function handlePrimaryAction() {
+      if (!window.__LMS_ENROLLED) {
+        postToNative('ENROLL_COURSE', {});
+        return;
+      }
+
+      var firstLesson = document.querySelector('.lesson-item');
+      if (firstLesson && typeof firstLesson.scrollIntoView === 'function') {
+        firstLesson.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      postToNative('HAPTIC', { type: 'medium' });
     }
-    window.toggleBookmark = toggleBookmark;
+    window.handlePrimaryAction = handlePrimaryAction;
 
     function shareCourse() {
       postToNative('SHARE_COURSE', {});

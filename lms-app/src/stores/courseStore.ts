@@ -1,8 +1,11 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { devtools } from 'zustand/middleware';
+import { enableMapSet } from 'immer';
 import { appStorage } from '@/lib/storage/appStorage';
 import { notificationService } from '@/services/notificationService';
+
+enableMapSet();
 
 export type CourseFilter =
   | 'All'
