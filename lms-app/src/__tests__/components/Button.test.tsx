@@ -29,7 +29,7 @@ describe('Button', () => {
     });
 
     it('shows ActivityIndicator when loading', () => {
-      const { queryByText, UNSAFE_getByType } = render(
+      const { queryByText } = render(
         <Button label="Loading..." onPress={onPress} loading />
       );
       // When loading, the label text is hidden

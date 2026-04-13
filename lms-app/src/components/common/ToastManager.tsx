@@ -1,8 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Text, Pressable, AccessibilityInfo, View as RNView } from 'react-native';
 import Animated, {
-  FadeIn,
-  FadeOut,
   SlideInUp,
   SlideOutUp,
   LinearTransition,
@@ -91,9 +89,10 @@ export function ToastManager() {
   // Register singleton
   useEffect(() => {
     _showToast = show;
+    const currentTimers = timers.current;
     return () => {
       _showToast = null;
-      timers.current.forEach((t) => clearTimeout(t));
+      currentTimers.forEach((t) => clearTimeout(t));
     };
   }, [show]);
 

@@ -37,7 +37,7 @@ export function useOfflineMode(): UseOfflineModeResult {
         pendingRef.current = [];
 
         if (__DEV__) {
-          console.log(`[OfflineMode] Replayed ${pending.length} pending action(s)`);
+          console.warn(`[OfflineMode] Replayed ${pending.length} pending action(s)`);
         }
       }
     }

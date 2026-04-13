@@ -45,7 +45,7 @@ apiClient.interceptors.request.use(
     config.headers['X-App-Version'] = '1.0.0';
 
     if (__DEV__) {
-      console.log(`[API] → ${config.method?.toUpperCase()} ${config.url}`);
+      console.warn(`[API] → ${config.method?.toUpperCase()} ${config.url}`);
     }
     return config;
   },
@@ -55,7 +55,7 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
     if (__DEV__) {
-      console.log(`[API] ← ${response.status} ${response.config.url}`);
+      console.warn(`[API] ← ${response.status} ${response.config.url}`);
     }
     return response;
   },

@@ -24,9 +24,13 @@ function AppShell() {
   useAppState();
 
   const [fontsLoaded, fontError] = useFonts({
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     Inter: require('../../assets/fonts/Inter-Regular.ttf'),
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     'Inter-Medium': require('../../assets/fonts/Inter-Medium.ttf'),
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     'Inter-SemiBold': require('../../assets/fonts/Inter-SemiBold.ttf'),
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     'Inter-Bold': require('../../assets/fonts/Inter-Bold.ttf'),
   });
 

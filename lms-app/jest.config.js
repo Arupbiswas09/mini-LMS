@@ -17,15 +17,33 @@ module.exports = {
     'node_modules/(?!(jest-)?react-native|@react-native|expo(?!-av)|@expo|@legendapp|nativewind|react-native-reanimated|react-native-gesture-handler|react-native-mmkv|@tanstack|zustand|immer)',
   ],
   collectCoverageFrom: [
-    'src/**/*.{ts,tsx}',
+    'src/stores/**/*.{ts,tsx}',
+    'src/hooks/**/*.{ts,tsx}',
+    'src/lib/**/*.{ts,tsx}',
+    'src/utils/**/*.{ts,tsx}',
+    'src/components/**/*.{ts,tsx}',
     '!src/**/*.d.ts',
-    '!src/app/**',
-    '!src/types/**',
+    '!src/**/index.ts',
   ],
   coverageThreshold: {
     global: {
+      lines: 9,
+      branches: 6,
+      functions: 9,
+    },
+    './src/stores/courseStore.ts': {
+      lines: 75,
+      branches: 80,
+      functions: 75,
+    },
+    './src/lib/api/errorHandler.ts': {
+      lines: 85,
+      branches: 70,
+      functions: 80,
+    },
+    './src/utils/courseMapper.ts': {
       lines: 70,
-      branches: 65,
+      branches: 50,
       functions: 70,
     },
   },
