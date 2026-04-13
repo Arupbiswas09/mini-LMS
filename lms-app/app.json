@@ -3,7 +3,7 @@
     "name": "Mini LMS",
     "slug": "mini-lms",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "mini-lms",
     "userInterfaceStyle": "automatic",

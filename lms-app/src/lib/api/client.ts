@@ -5,6 +5,8 @@ import { secureStorage } from '@/lib/storage/secureStorage';
 import { normalizeError } from './errorHandler';
 
 let navigateToLogin: (() => void) | null = null;
+let isRefreshing = false;
+let refreshQueue: Array<(token: string) => void> = [];
 
 export function setNavigationHandler(handler: () => void): void {
   navigateToLogin = handler;
@@ -59,10 +61,48 @@ apiClient.interceptors.response.use(
   },
   async (error: unknown) => {
     const axiosError = error as import('axios').AxiosError;
+    const originalConfig = axiosError.config as (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined;
 
-    if (axiosError.response?.status === 401) {
-      await secureStorage.clearAll();
-      navigateToLogin?.();
+    if (axiosError.response?.status === 401 && originalConfig && !originalConfig._retry) {
+      originalConfig._retry = true;
+
+      // If a refresh is already in-flight, queue this request
+      if (isRefreshing) {
+        return new Promise<AxiosResponse>((resolve) => {
+          refreshQueue.push((token: string) => {
+            originalConfig.headers.Authorization = `Bearer ${token}`;
+            resolve(apiClient(originalConfig));
+          });
+        });
+      }
+
+      isRefreshing = true;
+      try {
+        const refreshToken = await secureStorage.getRefreshToken();
+        if (!refreshToken) throw new Error('No refresh token');
+
+        const resp = await axios.post<{ data: { accessToken: string; refreshToken: string } }>(
+          `${BASE_URL}/api/v1/users/refresh-token`,
+          { refreshToken }
+        );
+        const { accessToken, refreshToken: newRefreshToken } = resp.data.data;
+        await secureStorage.setToken(accessToken);
+        await secureStorage.setRefreshToken(newRefreshToken);
+
+        // Drain the queue
+        refreshQueue.forEach((cb) => cb(accessToken));
+        refreshQueue = [];
+
+        originalConfig.headers.Authorization = `Bearer ${accessToken}`;
+        return apiClient(originalConfig);
+      } catch {
+        // Refresh failed — log out
+        refreshQueue = [];
+        await secureStorage.clearAll();
+        navigateToLogin?.();
+      } finally {
+        isRefreshing = false;
+      }
     }
 
     return Promise.reject(normalizeError(error));
