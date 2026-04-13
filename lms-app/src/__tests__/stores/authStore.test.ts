@@ -46,8 +46,8 @@ const fakeUser: User = {
   _id: 'user-1',
   username: 'johndoe',
   email: 'john@example.com',
-  role: 'user',
-  avatar: null,
+  role: 'USER',
+  isEmailVerified: true,
   createdAt: '2024-01-01',
   updatedAt: '2024-01-01',
 };

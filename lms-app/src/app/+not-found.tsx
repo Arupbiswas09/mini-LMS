@@ -13,7 +13,7 @@ export default function NotFoundScreen() {
         <Text className="text-base text-neutral-500 text-center mb-8">
           The screen you are looking for doesn't exist.
         </Text>
-        <Link href="/(app)/(tabs)/index" className="text-primary-600 font-semibold text-base">
+        <Link href="/(app)/(tabs)" className="text-primary-600 font-semibold text-base">
           Go to Home
         </Link>
       </View>

@@ -1,6 +1,11 @@
 import { useDebounce } from '@/hooks/useDebounce';
 import { act, renderHook } from '@testing-library/react-native';
 
+type DebounceProps = {
+  value: string;
+  delay: number;
+};
+
 jest.useFakeTimers();
 
 describe('useDebounce', () => {
@@ -10,8 +15,8 @@ describe('useDebounce', () => {
   });
 
   it('does not update value before delay', () => {
-    const { result, rerender } = renderHook(
-      ({ value, delay }) => useDebounce(value, delay),
+    const { result, rerender } = renderHook<string, DebounceProps>(
+      ({ value, delay }: DebounceProps) => useDebounce(value, delay),
       { initialProps: { value: 'initial', delay: 300 } }
     );
 
@@ -20,8 +25,8 @@ describe('useDebounce', () => {
   });
 
   it('updates value after delay', async () => {
-    const { result, rerender } = renderHook(
-      ({ value, delay }) => useDebounce(value, delay),
+    const { result, rerender } = renderHook<string, DebounceProps>(
+      ({ value, delay }: DebounceProps) => useDebounce(value, delay),
       { initialProps: { value: 'initial', delay: 300 } }
     );
 
@@ -35,8 +40,8 @@ describe('useDebounce', () => {
   });
 
   it('resets timer when value changes rapidly', () => {
-    const { result, rerender } = renderHook(
-      ({ value, delay }) => useDebounce(value, delay),
+    const { result, rerender } = renderHook<string, DebounceProps>(
+      ({ value, delay }: DebounceProps) => useDebounce(value, delay),
       { initialProps: { value: 'a', delay: 300 } }
     );
 

@@ -5,7 +5,7 @@ export default function IndexRoute() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   if (isAuthenticated) {
-    return <Redirect href="/(app)/(tabs)/index" />;
+    return <Redirect href="/(app)/(tabs)" />;
   }
 
   return <Redirect href="/(auth)/login" />;

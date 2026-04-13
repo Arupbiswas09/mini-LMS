@@ -8,7 +8,7 @@ export default function AuthLayout() {
   const isDarkMode = usePreferencesStore((state) => state.isDarkMode);
 
   if (isAuthenticated) {
-    return <Redirect href="/(app)/(tabs)/index" />;
+    return <Redirect href="/(app)/(tabs)" />;
   }
 
   const headerBg = isDarkMode ? Colors.neutral[900] : Colors.white;

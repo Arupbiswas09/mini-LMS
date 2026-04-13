@@ -21,15 +21,18 @@ const mockCourse: CourseWithInstructor = {
   enrollmentCount: 500,
   category: 'Technology',
   difficulty: 'Advanced',
+  instructorId: 'user-1',
+  language: 'English',
   tags: ['react', 'mobile'],
   instructor: {
     id: 'user-1',
     name: 'Jane Smith',
     avatar: 'https://example.com/avatar.jpg',
     bio: 'Senior Engineer based in NYC',
+    specialty: 'Mobile Development',
+    email: 'jane@example.com',
+    location: 'NYC',
     courseCount: 5,
-    studentCount: 2000,
-    rating: 4.8,
   },
 };
 

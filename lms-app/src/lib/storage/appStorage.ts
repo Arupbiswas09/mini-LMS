@@ -1,12 +1,47 @@
-import { createMMKV, type MMKV } from 'react-native-mmkv';
+import { createMMKV } from 'react-native-mmkv';
 import type { UserPreferences, LessonProgress } from '@/types';
+
+type StorageAdapter = {
+  getString: (key: string) => string | undefined;
+  getNumber: (key: string) => number | undefined;
+  set: (key: string, value: string | number | boolean) => void;
+  remove: (key: string) => void;
+  clearAll: () => void;
+};
 
 const SCHEMA_VERSION = 1;
 const SCHEMA_VERSION_KEY = 'schema_version';
 
-export const storage: MMKV = createMMKV({
-  id: 'mini-lms-storage',
-});
+function createMemoryStorage(): StorageAdapter {
+  const values = new Map<string, string>();
+
+  return {
+    getString: (key) => values.get(key),
+    getNumber: (key) => {
+      const value = values.get(key);
+      if (value === undefined) return undefined;
+      const parsed = Number(value);
+      return Number.isNaN(parsed) ? undefined : parsed;
+    },
+    set: (key, value) => {
+      values.set(key, String(value));
+    },
+    remove: (key) => {
+      values.delete(key);
+    },
+    clearAll: () => {
+      values.clear();
+    },
+  };
+}
+
+const isServerWeb = typeof window === 'undefined';
+
+export const storage: StorageAdapter = isServerWeb
+  ? createMemoryStorage()
+  : createMMKV({
+      id: 'mini-lms-storage',
+    });
 
 function migrateIfNeeded(): void {
   const storedVersion = storage.getNumber(SCHEMA_VERSION_KEY) ?? 0;

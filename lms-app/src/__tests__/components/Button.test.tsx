@@ -60,9 +60,7 @@ describe('Button', () => {
 
   describe('accessibility', () => {
     it('reflects disabled state in accessibilityState', () => {
-      const { getByRole } = render(
-        <Button label="Disabled" onPress={onPress} disabled accessibilityRole="button" />
-      );
+      const { getByRole } = render(<Button label="Disabled" onPress={onPress} disabled />);
       const btn = getByRole('button');
       expect(btn.props.accessibilityState?.disabled).toBe(true);
     });
