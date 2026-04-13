@@ -103,11 +103,14 @@ EXPO_PUBLIC_API_BASE_URL=https://api.freeapi.app
 EXPO_PUBLIC_SENTRY_DSN=your_sentry_dsn_here
 EXPO_PUBLIC_SUPABASE_URL=your_supabase_project_url
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+EXPO_PUBLIC_SUPABASE_AI_FUNCTION=ai-recommend
 ```
 
 > `EXPO_PUBLIC_SENTRY_DSN` is optional — app works without it, errors just won't be reported to Sentry.
 >
 > Supabase vars are optional. If provided, analytics events are posted to `analytics_events` via REST.
+>
+> `EXPO_PUBLIC_SUPABASE_AI_FUNCTION` is optional. Default is `ai-recommend` for AI recommendation ranking via Supabase Edge Functions.
 
 ### Run
 

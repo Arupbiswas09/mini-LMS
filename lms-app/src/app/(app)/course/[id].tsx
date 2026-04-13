@@ -24,6 +24,7 @@ import { useCourse } from '@/hooks/useCourse';
 import { useCourseStore } from '@/stores/courseStore';
 import { queryClient, queryKeys } from '@/lib/queryClient';
 import { analyticsService } from '@/services/analyticsService';
+import { rankRelatedCourses } from '@/services/aiRecommendationService';
 import { EnrollButton } from '@/components/course/EnrollButton';
 import { CurriculumList } from '@/components/course/CurriculumList';
 import { RatingStars } from '@/components/ui/RatingStars';
@@ -39,6 +40,7 @@ export default function CourseDetailScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [expanded, setExpanded] = useState(false);
+  const [recommendedCourses, setRecommendedCourses] = useState<CourseWithInstructor[]>([]);
   const bookmarkPulse = useSharedValue(1);
 
   const { data: course, isPending, isError, error, refetch } = useCourse(id);
@@ -125,6 +127,24 @@ export default function CourseDetailScreen() {
       .filter((c) => c.id !== course.id && c.category === course.category)
       .slice(0, 8);
   }, [course]);
+
+  useEffect(() => {
+    if (!course || relatedCourses.length === 0) {
+      setRecommendedCourses([]);
+      return;
+    }
+
+    let active = true;
+    void rankRelatedCourses(course, relatedCourses).then((ranked) => {
+      if (active) {
+        setRecommendedCourses(ranked.slice(0, 8));
+      }
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [course, relatedCourses]);
 
   useEffect(() => {
     if (!course) return;
@@ -363,10 +383,10 @@ export default function CourseDetailScreen() {
             onLessonPress={handleLessonPress}
           />
 
-          {relatedCourses.length > 0 ? (
+          {recommendedCourses.length > 0 ? (
             <View className="mt-8 mb-4">
               <Text className="text-base font-semibold text-neutral-900 dark:text-white mb-3">
-                Related courses
+                Recommended for you
               </Text>
               <ScrollView
                 horizontal
@@ -374,7 +394,7 @@ export default function CourseDetailScreen() {
                 keyboardShouldPersistTaps="handled"
                 nestedScrollEnabled
               >
-                {relatedCourses.map((c) => (
+                {recommendedCourses.map((c) => (
                   <TouchableOpacity
                     key={c.id}
                     onPress={() => router.push(`/(app)/course/${c.id}`)}
