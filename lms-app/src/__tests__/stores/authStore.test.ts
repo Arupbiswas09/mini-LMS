@@ -1,4 +1,4 @@
-import { act, renderHook } from '@testing-library/react-hooks';
+import { act, renderHook } from '@testing-library/react-native';
 import { useAuthStore } from '@/stores/authStore';
 import { authService } from '@/services/authService';
 import type { User } from '@/types';

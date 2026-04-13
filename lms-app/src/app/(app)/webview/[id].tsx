@@ -18,8 +18,17 @@ import { buildWebViewBootstrapScript } from '@/lib/webview/bootstrapScript';
 import { WebViewProgressBar } from '@/components/webview/WebViewProgressBar';
 import { WebViewError } from '@/components/webview/WebViewError';
 import { SkeletonLoader } from '@/components/ui/SkeletonLoader';
+import { BASE_URL } from '@/constants/api';
 
-const ALLOWED_HOSTS = ['api.freeapi.app', 'freeapi.app'];
+const ALLOWED_HOSTS = (() => {
+  try {
+    const hostname = new URL(BASE_URL).hostname;
+    const bare = hostname.replace(/^www\./, '');
+    return Array.from(new Set([hostname, bare]));
+  } catch {
+    return ['api.freeapi.app', 'freeapi.app'];
+  }
+})();
 const APP_VERSION = '1.0.0';
 
 export default function CourseWebViewScreen() {
@@ -111,7 +120,7 @@ export default function CourseWebViewScreen() {
   const webSource = useMemo(
     () => ({
       html: htmlContent,
-      baseUrl: 'https://api.freeapi.app',
+      baseUrl: BASE_URL,
       headers: requestHeaders,
     }),
     [htmlContent, requestHeaders]

@@ -1,4 +1,4 @@
-import { act, renderHook } from '@testing-library/react-hooks';
+import { act, renderHook } from '@testing-library/react-native';
 import { useCourseStore } from '@/stores/courseStore';
 import { notificationService } from '@/services/notificationService';
 

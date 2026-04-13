@@ -1,4 +1,5 @@
 import type { CourseWithInstructor } from '@/types';
+import { BASE_URL } from '@/constants/api';
 
 function escapeHtml(str: string): string {
   return str
@@ -347,7 +348,7 @@ export function generateCourseHTML(
   <div class="section-title">Curriculum</div>
   ${curriculum}
   <p style="margin-top:16px;font-size:13px;color:var(--text-muted)">
-    <a href="#" class="link-out" onclick="event.preventDefault(); postToNative('OPEN_LINK', { url: 'https://api.freeapi.app' }); return false;">Open course host in browser →</a>
+    <a href="#" class="link-out" onclick="event.preventDefault(); postToNative('OPEN_LINK', { url: '${BASE_URL}' }); return false;">Open course host in browser →</a>
   </p>
 </div>
 
