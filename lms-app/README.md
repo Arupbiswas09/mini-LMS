@@ -132,9 +132,11 @@ npx expo run:ios
 ```bash
 npm test                # all tests
 npm run test:watch      # watch mode
-npm run test:coverage   # coverage report (target: >70%)
+npm run test:coverage   # coverage report (core logic gate: 75% lines/functions, 60% branches)
 npm run e2e:smoke       # Maestro smoke flows (requires Maestro CLI)
 ```
+
+Coverage is enforced on the app's core business-logic modules: stores, services, API/storage utilities, bridge logic, and mapping code. The current gate is 75% for lines/functions/statements and 60% for branches. Presentational UI coverage is additive and still being expanded.
 
 ### E2E Smoke Flows
 

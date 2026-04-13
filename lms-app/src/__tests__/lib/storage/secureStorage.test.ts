@@ -47,6 +47,40 @@ describe('secureStorage', () => {
       await secureStorage.clearAll();
       expect(mockDeleteItem).toHaveBeenCalledWith('auth_access_token');
       expect(mockDeleteItem).toHaveBeenCalledWith('auth_refresh_token');
+      expect(mockDeleteItem).toHaveBeenCalledWith('auth_biometric_creds');
+    });
+  });
+
+  describe('biometric credentials', () => {
+    it('stores biometric credentials', async () => {
+      await secureStorage.setBiometricCredentials({ email: 'john@example.com', password: 'pass' });
+
+      expect(mockSetItem).toHaveBeenCalledWith(
+        'auth_biometric_creds',
+        JSON.stringify({ email: 'john@example.com', password: 'pass' }),
+        expect.any(Object)
+      );
+    });
+
+    it('parses biometric credentials', async () => {
+      mockGetItem.mockResolvedValueOnce(JSON.stringify({ email: 'john@example.com', password: 'pass' }));
+
+      await expect(secureStorage.getBiometricCredentials()).resolves.toEqual({
+        email: 'john@example.com',
+        password: 'pass',
+      });
+    });
+
+    it('returns null for invalid biometric payload', async () => {
+      mockGetItem.mockResolvedValueOnce('{bad-json');
+
+      await expect(secureStorage.getBiometricCredentials()).resolves.toBeNull();
+    });
+
+    it('removes biometric credentials', async () => {
+      await secureStorage.removeBiometricCredentials();
+
+      expect(mockDeleteItem).toHaveBeenCalledWith('auth_biometric_creds');
     });
   });
 });

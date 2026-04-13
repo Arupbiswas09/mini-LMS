@@ -1,5 +1,5 @@
 import { Platform } from 'react-native';
-import * as FileSystem from 'expo-file-system/legacy';
+import { Paths } from 'expo-file-system';
 
 export type SecurityRiskLevel = 'safe' | 'suspicious' | 'compromised';
 
@@ -31,12 +31,20 @@ const IOS_JAILBREAK_PATHS = [
 ] as const;
 
 async function checkPathExists(path: string): Promise<boolean> {
-  try {
-    const info = await FileSystem.getInfoAsync(path);
-    return info.exists;
-  } catch {
-    return false;
+  const candidates = path.startsWith('file://') ? [path] : [path, `file://${path}`];
+
+  for (const candidate of candidates) {
+    try {
+      const info = Paths.info(candidate);
+      if (info.exists) {
+        return true;
+      }
+    } catch {
+      // Ignore invalid path formats and continue probing.
+    }
   }
+
+  return false;
 }
 
 async function checkAndroidIndicators(): Promise<string[]> {

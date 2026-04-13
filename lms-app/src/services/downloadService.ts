@@ -1,19 +1,26 @@
-import {
-  documentDirectory,
-  createDownloadResumable,
-  type DownloadResumable,
-  type DownloadProgressData,
-} from 'expo-file-system/legacy';
+import { Directory, File, Paths } from 'expo-file-system';
 import { appStorage } from '@/lib/storage/appStorage';
 import type { DownloadState } from '@/types';
 
 type ProgressCallback = (progress: number) => void;
 
-const activeDownloads = new Map<string, DownloadResumable>();
+type ActiveDownload = {
+  controller: AbortController;
+  file: File;
+};
 
-function localUri(filename: string): string {
-  const base = documentDirectory ?? '';
-  return `${base}lms_downloads/${filename}`;
+const activeDownloads = new Map<string, ActiveDownload>();
+
+function ensureDownloadsDirectory(): Directory {
+  const directory = new Directory(Paths.document, 'lms_downloads');
+  if (!directory.exists) {
+    directory.create({ idempotent: true, intermediates: true });
+  }
+  return directory;
+}
+
+function localFile(filename: string): File {
+  return new File(ensureDownloadsDirectory(), filename);
 }
 
 /**
@@ -27,39 +34,77 @@ async function downloadCourseResource(
 ): Promise<string> {
   appStorage.setDownloadState(filename, { status: 'downloading' });
 
-  const destUri = localUri(filename);
+  const destFile = localFile(filename);
+  const controller = new AbortController();
 
-  const progressCallback = (data: DownloadProgressData) => {
-    const { totalBytesWritten, totalBytesExpectedToWrite } = data;
-    const pct =
-      totalBytesExpectedToWrite > 0
-        ? Math.round((totalBytesWritten / totalBytesExpectedToWrite) * 100)
-        : 0;
-    onProgress?.(pct);
-  };
+  if (destFile.exists) {
+    destFile.delete();
+  }
+  destFile.create({ intermediates: true, overwrite: true });
 
-  const resumable = createDownloadResumable(url, destUri, {}, progressCallback);
-  activeDownloads.set(filename, resumable);
+  activeDownloads.set(filename, { controller, file: destFile });
 
   try {
-    const result = await resumable.downloadAsync();
-    activeDownloads.delete(filename);
+    const response = await fetch(url, {
+      method: 'GET',
+      signal: controller.signal,
+    });
 
-    if (!result || result.status !== 200) {
-      throw new Error(`Download failed with status ${result?.status ?? 'unknown'}`);
+    if (!response.ok) {
+      throw new Error(`Download failed with status ${response.status}`);
+    }
+
+    const totalBytesExpected = Number(response.headers.get('content-length') ?? '0');
+    const responseBody = response.body;
+
+    if (responseBody && typeof responseBody.getReader === 'function') {
+      const reader = responseBody.getReader();
+      const writer = destFile.writableStream().getWriter();
+      let totalBytesWritten = 0;
+      let done = false;
+
+      try {
+        while (!done) {
+          const chunk = await reader.read();
+          done = chunk.done;
+          const value = chunk.value;
+          if (!value) continue;
+
+          totalBytesWritten += value.byteLength;
+          await writer.write(value);
+
+          const pct =
+            totalBytesExpected > 0 ? Math.round((totalBytesWritten / totalBytesExpected) * 100) : 0;
+          onProgress?.(pct);
+        }
+      } finally {
+        reader.releaseLock?.();
+        await writer.close();
+      }
+    } else {
+      const fileBytes = new Uint8Array(await response.arrayBuffer());
+      destFile.write(fileBytes);
     }
 
     appStorage.setDownloadState(filename, {
       status: 'completed',
-      path: result.uri,
-      size: result.headers['content-length'] ? parseInt(result.headers['content-length'], 10) : undefined,
+      path: destFile.uri,
+      size: destFile.size || (totalBytesExpected > 0 ? totalBytesExpected : undefined),
     });
     onProgress?.(100);
-    return result.uri;
+    return destFile.uri;
   } catch (err) {
-    activeDownloads.delete(filename);
+    if (destFile.exists) {
+      destFile.delete();
+    }
+    if (err instanceof Error && err.name === 'AbortError') {
+      appStorage.removeDownloadState(filename);
+      throw new Error('Download canceled');
+    }
     appStorage.setDownloadState(filename, { status: 'error' });
     throw err;
+  } finally {
+    activeDownloads.delete(filename);
   }
 }
 
@@ -89,8 +134,11 @@ function getDownloadedFiles(): Record<string, DownloadState> {
 async function deleteDownload(filename: string): Promise<void> {
   const active = activeDownloads.get(filename);
   if (active) {
-    await active.cancelAsync().catch(() => {});
+    active.controller.abort();
     activeDownloads.delete(filename);
+    if (active.file.exists) {
+      active.file.delete();
+    }
   }
   appStorage.removeDownloadState(filename);
 }

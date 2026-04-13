@@ -84,4 +84,32 @@ describe('courseService.getCoursesWithInstructors', () => {
 
     expect(result.data[0]?.instructor.name).toBe('Mini LMS Team');
   });
+
+  it('reuses cached instructors if a later instructor request fails', async () => {
+    jest.spyOn(courseService, 'getCourses').mockResolvedValue(sampleCourses);
+
+    const getInstructorsSpy = jest
+      .spyOn(courseService, 'getInstructors')
+      .mockResolvedValueOnce(sampleInstructors)
+      .mockRejectedValueOnce(new Error('network failed'));
+
+    await courseService.getCoursesWithInstructors(1, 10);
+    const result = await courseService.getCoursesWithInstructors(2, 10);
+
+    expect(getInstructorsSpy).toHaveBeenCalledTimes(1);
+    expect(result.data[0]?.instructor.name).toBe('Jane Doe');
+  });
+
+  it('falls back to built-in instructor when instructor API returns no data', async () => {
+    jest.spyOn(courseService, 'getCourses').mockResolvedValue(sampleCourses);
+    jest.spyOn(courseService, 'getInstructors').mockResolvedValue({
+      ...sampleInstructors,
+      data: [],
+      totalItems: 0,
+    });
+
+    const result = await courseService.getCoursesWithInstructors(1, 10);
+
+    expect(result.data[0]?.instructor.name).toBe('Mini LMS Team');
+  });
 });
