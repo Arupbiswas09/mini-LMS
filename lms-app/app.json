@@ -1,0 +1,97 @@
+{
+  "expo": {
+    "name": "Mini LMS",
+    "slug": "mini-lms",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "mini-lms",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#2563eb"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.minilms.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Used to capture a profile picture.",
+        "NSPhotoLibraryUsageDescription": "Used to select a profile picture from your library.",
+        "NSFaceIDUsageDescription": "Used for biometric authentication to keep your account secure.",
+        "NSMicrophoneUsageDescription": "Microphone access is not required by this app."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#2563eb"
+      },
+      "package": "com.minilms.app",
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE",
+        "INTERNET"
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-font",
+        {
+          "fonts": [
+            "./assets/fonts/Inter-Regular.ttf",
+            "./assets/fonts/Inter-Medium.ttf",
+            "./assets/fonts/Inter-SemiBold.ttf",
+            "./assets/fonts/Inter-Bold.ttf"
+          ]
+        }
+      ],
+      [
+        "expo-secure-store",
+        {
+          "faceIDPermission": "Allow Mini LMS to use Face ID to keep your account secure."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#2563eb",
+          "androidMode": "default",
+          "androidCollapsedTitle": "Mini LMS",
+          "iosDisplayInForeground": true,
+          "sounds": []
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Mini LMS to access your photos to update your profile picture.",
+          "cameraPermission": "Allow Mini LMS to access your camera to take a profile photo."
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow Mini LMS to use Face ID for quick and secure sign-in."
+        }
+      ],
+      "expo-web-browser"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
