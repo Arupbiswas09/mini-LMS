@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   ScrollView,
   Keyboard,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -47,6 +48,9 @@ export default function CoursesCatalogScreen() {
   const searchBarHeight = useSharedValue(0);
   const endReachedLock = useRef(false);
   const searchInputRef = useRef<TextInput>(null);
+
+  const { width, height } = useWindowDimensions();
+  const numColumns = width > height ? 2 : 1;
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, error, refetch } =
     useInfiniteCourses();
@@ -180,16 +184,18 @@ export default function CoursesCatalogScreen() {
 
   const renderItem = useCallback(
     ({ item }: LegendListRenderItemProps<CourseWithInstructor>) => (
-      <CourseCard
-        course={item}
-        onPress={handleCoursePress}
-        onLongPress={handleCourseLongPress}
-        onBookmark={handleBookmark}
-        isBookmarked={isBookmarked(item.id)}
-        highlightQuery={debouncedSearch}
-      />
+      <View style={numColumns > 1 ? { flex: 1 } : undefined}>
+        <CourseCard
+          course={item}
+          onPress={handleCoursePress}
+          onLongPress={handleCourseLongPress}
+          onBookmark={handleBookmark}
+          isBookmarked={isBookmarked(item.id)}
+          highlightQuery={debouncedSearch}
+        />
+      </View>
     ),
-    [handleCoursePress, handleCourseLongPress, handleBookmark, isBookmarked, debouncedSearch]
+    [handleCoursePress, handleCourseLongPress, handleBookmark, isBookmarked, debouncedSearch, numColumns]
   );
 
   // Stable item type: all items are the same card layout
@@ -203,8 +209,13 @@ export default function CoursesCatalogScreen() {
         <View className="flex-row items-center justify-between px-1 mb-3">
           <View className="flex-1 mr-2">
             <Text className="text-2xl font-bold text-neutral-900 dark:text-white">Discover Courses</Text>
-            <Text className="text-sm text-neutral-500 dark:text-neutral-400">
-              {allCourses.length} courses available
+            <Text
+              className="text-sm text-neutral-500 dark:text-neutral-400"
+              accessibilityLiveRegion="polite"
+            >
+              {activeFilter !== 'All' || debouncedSearch
+                ? `${visibleCourses.length} of ${allCourses.length} courses`
+                : `${allCourses.length} courses available`}
             </Text>
           </View>
           <View className="flex-row items-center">
@@ -291,7 +302,9 @@ export default function CoursesCatalogScreen() {
     ),
     [
       allCourses,
+      visibleCourses.length,
       activeFilter,
+      debouncedSearch,
       bookmarks.size,
       handleOpenBookmarks,
       handleOpenNotifications,
@@ -404,9 +417,12 @@ export default function CoursesCatalogScreen() {
     <SafeAreaView className="flex-1 bg-white dark:bg-neutral-900" edges={['top']}>
       <OfflineBanner />
       <LegendList
+        key={numColumns}
         data={visibleCourses}
         keyExtractor={keyExtractor}
         renderItem={renderItem}
+        numColumns={numColumns}
+        columnWrapperStyle={numColumns > 1 ? { gap: 8 } : undefined}
         estimatedItemSize={180}
         onEndReached={onEndReached}
         onEndReachedThreshold={0.3}

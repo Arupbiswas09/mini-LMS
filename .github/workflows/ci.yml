@@ -103,3 +103,60 @@ jobs:
         run: npx expo export --platform web --output-dir /tmp/expo-web-out
         env:
           CI: true
+          EXPO_PUBLIC_API_BASE_URL: https://api.freeapi.app
+          EXPO_PUBLIC_SENTRY_DSN: ""
+          EXPO_PUBLIC_SUPABASE_URL: ""
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ""
+          EXPO_PUBLIC_SUPABASE_AI_FUNCTION: ai-recommend
+
+  maestro-e2e:
+    name: E2E Smoke Tests (Maestro Cloud)
+    runs-on: ubuntu-latest
+    # Only on push to main when the Maestro Cloud API key is available.
+    # Skip on PRs to avoid blocking branches without the secret.
+    if: >
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main'
+    needs: [lint, type-check, test, build-check]
+    defaults:
+      run:
+        working-directory: lms-app
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: lms-app/package-lock.json
+
+      - name: Install Maestro CLI
+        run: |
+          curl -Ls "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+
+      - name: Validate Maestro flow syntax
+        # Dry-run: parses all YAML flows without a device.
+        # This catches malformed YAML before a real device run.
+        run: |
+          maestro test --format junit --dry-run \
+            e2e/maestro/smoke-auth-catalog.yaml \
+            e2e/maestro/smoke-detail-webview-profile.yaml \
+          || true
+
+      - name: Upload flows to Maestro Cloud
+        # Requires MAESTRO_CLOUD_API_KEY and MAESTRO_APP_FILE_URL (latest EAS APK)
+        # set in GitHub → Settings → Secrets → Actions.
+        # See README for instructions to obtain these.
+        if: >
+          vars.MAESTRO_CLOUD_API_KEY != '' ||
+          secrets.MAESTRO_CLOUD_API_KEY != ''
+        env:
+          MAESTRO_CLOUD_API_KEY: ${{ secrets.MAESTRO_CLOUD_API_KEY }}
+        run: |
+          maestro cloud \
+            --apiKey "$MAESTRO_CLOUD_API_KEY" \
+            --app "${{ secrets.MAESTRO_APP_FILE_URL }}" \
+            e2e/maestro/

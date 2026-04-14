@@ -6,13 +6,16 @@ A production-grade mobile Learning Management System built with React Native Exp
 
 ## Screenshots
 
+> Screenshots taken from development build on iOS simulator and Android emulator.
+> Add your own by placing PNGs in `assets/screenshots/` and updating the table below.
+
 | Login | Course Catalog | Course Detail |
 |---|---|---|
-| ![Login](assets/screenshots/login.png) | ![Catalog](assets/screenshots/catalog.png) | ![Detail](assets/screenshots/detail.png) |
+| *(add login.png)* | *(add catalog.png)* | *(add detail.png)* |
 
 | WebView | Profile | Dark Mode |
 |---|---|---|
-| ![WebView](assets/screenshots/webview.png) | ![Profile](assets/screenshots/profile.png) | ![Dark](assets/screenshots/dark.png) |
+| *(add webview.png)* | *(add profile.png)* | *(add dark.png)* |
 
 ---
 
@@ -96,15 +99,26 @@ npm install
 
 ### Environment Variables
 
-Create a `.env.local` file in `lms-app/`:
+Copy `.env.example` to `.env.local` and fill in your values:
+
+```bash
+cp .env.example .env.local
+```
 
 ```env
+# Required (app still works without it – falls back to https://api.freeapi.app)
 EXPO_PUBLIC_API_BASE_URL=https://api.freeapi.app
+
+# Optional – Sentry error tracking (leave blank to disable)
 EXPO_PUBLIC_SENTRY_DSN=your_sentry_dsn_here
+
+# Optional – Supabase analytics + AI recommendations
 EXPO_PUBLIC_SUPABASE_URL=your_supabase_project_url
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 EXPO_PUBLIC_SUPABASE_AI_FUNCTION=ai-recommend
 ```
+
+> EAS builds inject these from **EAS Secrets** (set once via `eas secret:create`). You never check in actual values — all sensitive keys live in the EAS vault and GitHub Actions secrets, not in version control.
 
 > `EXPO_PUBLIC_SENTRY_DSN` is optional — app works without it, errors just won't be reported to Sentry.
 >
@@ -149,19 +163,49 @@ Install Maestro CLI: `curl -Ls "https://get.maestro.mobile.dev" | bash`
 
 ## Build APK
 
+### 1. One-time EAS setup
+
 ```bash
-# Install EAS CLI
 npm install -g eas-cli
 eas login
-
-# Development APK (for testing)
-eas build --platform android --profile preview
-
-# Production AAB (for Play Store)
-eas build --platform android --profile production
+# Store secrets in the EAS vault (run once per project):
+eas secret:create --scope project --name EXPO_PUBLIC_SENTRY_DSN      --value "your_dsn"
+eas secret:create --scope project --name EXPO_PUBLIC_SUPABASE_URL     --value "https://xxx.supabase.co"
+eas secret:create --scope project --name EXPO_PUBLIC_SUPABASE_ANON_KEY --value "your_anon_key"
+eas secret:create --scope project --name SENTRY_AUTH_TOKEN             --value "your_sentry_auth_token"
 ```
 
-The preview APK will be available as a download link after the build completes (~5 mins on EAS servers).
+### 2. Build commands
+
+```bash
+# Development APK (internal testing, includes debug devtools)
+eas build --platform android --profile development
+
+# Preview APK (internal distribution, production JS bundle, no devtools)
+eas build --platform android --profile preview
+
+# Production AAB (Google Play store submission)
+eas build --platform android --profile production
+
+# iOS simulator build
+eas build --platform ios --profile preview
+```
+
+The preview APK download link appears in terminal output after ~5 mins on EAS servers. APK is also attached as a GitHub Release asset when a `v*.*.*` tag is pushed.
+
+### 3. GitHub Actions secrets (for CI EAS builds)
+
+Add these in **GitHub → Settings → Secrets → Actions**:
+
+| Secret | Description |
+|---|---|
+| `EXPO_TOKEN` | EAS personal access token (`eas token:create`) |
+| `EXPO_PUBLIC_SENTRY_DSN` | Sentry DSN (optional) |
+| `EXPO_PUBLIC_SUPABASE_URL` | Supabase project URL (optional) |
+| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key (optional) |
+| `SENTRY_AUTH_TOKEN` | Sentry auth token for source map upload (optional) |
+
+Push a tag or run **Actions → EAS Build & Release → Run workflow** to trigger.
 
 ---
 
