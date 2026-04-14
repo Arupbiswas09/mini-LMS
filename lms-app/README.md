@@ -19,6 +19,14 @@ A production-grade mobile Learning Management System built with React Native Exp
 
 ---
 
+## Demo Video
+
+> [▶ Watch 3-minute walkthrough](YOUR_VIDEO_LINK_HERE)
+>
+> Covers: auth flow → course catalog → course detail → WebView content bridge → offline mode → push notifications → dark mode
+
+---
+
 ## Tech Stack
 
 | Concern | Library | Why |
