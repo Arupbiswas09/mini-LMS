@@ -6,24 +6,23 @@ A production-grade mobile Learning Management System built with React Native Exp
 
 ## Screenshots
 
-> Screenshots taken from development build on iOS simulator and Android emulator.
-> Add your own by placing PNGs in `assets/screenshots/` and updating the table below.
+> Screenshots taken from Android device (dark mode).
 
-| Login | Course Catalog | Course Detail |
-|---|---|---|
-| *(add login.png)* | *(add catalog.png)* | *(add detail.png)* |
+| Splash Screen | Register | Course Catalog |
+|:---:|:---:|:---:|
+| ![Splash Screen](assets/screenshots/WhatsApp%20Image%202026-04-14%20at%2015.25.09%20(1).jpeg) | ![Register](assets/screenshots/WhatsApp%20Image%202026-04-14%20at%2015.25.08.jpeg) | ![Course Catalog](assets/screenshots/WhatsApp%20Image%202026-04-14%20at%2015.25.09%20(2).jpeg) |
 
-| WebView | Profile | Dark Mode |
-|---|---|---|
-| *(add webview.png)* | *(add profile.png)* | *(add dark.png)* |
+| Course Catalog (Scrolled) | Course Detail | Course WebView |
+|:---:|:---:|:---:|
+| ![Course Catalog Scrolled](assets/screenshots/WhatsApp%20Image%202026-04-14%20at%2015.25.09.jpeg) | ![Course Detail](assets/screenshots/WhatsApp%20Image%202026-04-14%20at%2015.25.09%20(4).jpeg) | ![Course WebView](assets/screenshots/WhatsApp%20Image%202026-04-14%20at%2015.25.10.jpeg) |
 
 ---
 
 ## Demo Video
 
-> [▶ Watch 3-minute walkthrough](YOUR_VIDEO_LINK_HERE)
+> [▶ Watch app walkthrough on Google Drive](https://drive.google.com/file/d/1vIh2Y63Ruo4K1QVfFIMBqhw4RFIOvduX/view?usp=sharing)
 >
-> Covers: auth flow → course catalog → course detail → WebView content bridge → offline mode → push notifications → dark mode
+> Covers: splash → auth flow → course catalog → course detail → WebView content bridge → offline mode → push notifications → dark mode
 
 ---
 
