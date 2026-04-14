@@ -89,16 +89,7 @@
           "faceIDPermission": "Allow Mini LMS to use Face ID for quick and secure sign-in."
         }
       ],
-      "expo-web-browser",
-      [
-        "@sentry/react-native/expo",
-        {
-          "organization": "arup-dev",
-          "project": "mini-lms",
-          "url": "https://sentry.io/",
-          "uploadSourceMaps": false
-        }
-      ]
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true
