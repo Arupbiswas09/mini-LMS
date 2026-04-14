@@ -150,13 +150,15 @@ jobs:
         # Requires MAESTRO_CLOUD_API_KEY and MAESTRO_APP_FILE_URL (latest EAS APK)
         # set in GitHub → Settings → Secrets → Actions.
         # See README for instructions to obtain these.
-        if: >
-          vars.MAESTRO_CLOUD_API_KEY != '' ||
-          secrets.MAESTRO_CLOUD_API_KEY != ''
         env:
           MAESTRO_CLOUD_API_KEY: ${{ secrets.MAESTRO_CLOUD_API_KEY }}
+          MAESTRO_APP_FILE_URL: ${{ secrets.MAESTRO_APP_FILE_URL }}
         run: |
+          if [[ -z "$MAESTRO_CLOUD_API_KEY" ]]; then
+            echo "MAESTRO_CLOUD_API_KEY not set — skipping cloud upload"
+            exit 0
+          fi
           maestro cloud \
             --apiKey "$MAESTRO_CLOUD_API_KEY" \
-            --app "${{ secrets.MAESTRO_APP_FILE_URL }}" \
+            --app "$MAESTRO_APP_FILE_URL" \
             e2e/maestro/

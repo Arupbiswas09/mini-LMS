@@ -40,6 +40,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Verify EXPO_TOKEN is set
+        run: |
+          if [[ -z "$EXPO_TOKEN" ]]; then
+            echo "::error::EXPO_TOKEN secret is not set. Go to GitHub → Settings → Secrets → Actions and add your Expo access token."
+            exit 1
+          fi
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
       - name: Setup EAS
         uses: expo/expo-github-action@v8
         with:
@@ -89,6 +98,15 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Verify EXPO_TOKEN is set
+        run: |
+          if [[ -z "$EXPO_TOKEN" ]]; then
+            echo "::error::EXPO_TOKEN secret is not set. Go to GitHub → Settings → Secrets → Actions and add your Expo access token."
+            exit 1
+          fi
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
       - name: Setup EAS
         uses: expo/expo-github-action@v8
