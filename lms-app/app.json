@@ -95,7 +95,8 @@
         {
           "organization": "arup-dev",
           "project": "mini-lms",
-          "url": "https://sentry.io/"
+          "url": "https://sentry.io/",
+          "uploadSourceMaps": false
         }
       ]
     ],
