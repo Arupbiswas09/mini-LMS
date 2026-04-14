@@ -25,6 +25,7 @@ import { CourseCard } from '@/components/course/CourseCard';
 import { FeaturedBanner } from '@/components/course/FeaturedBanner';
 import { CategoryPill } from '@/components/ui/CategoryPill';
 import { OfflineBanner } from '@/components/common/OfflineBanner';
+import { AppLogo } from '@/components/ui/AppLogo';
 import { searchCourses } from '@/utils/courseMapper';
 import type { CourseWithInstructor } from '@/types';
 import type { CourseFilter } from '@/stores/courseStore';
@@ -207,16 +208,20 @@ export default function CoursesCatalogScreen() {
     () => (
       <View className="pb-2">
         <View className="flex-row items-center justify-between px-1 mb-3">
-          <View className="flex-1 mr-2">
-            <Text className="text-2xl font-bold text-neutral-900 dark:text-white">Discover Courses</Text>
-            <Text
-              className="text-sm text-neutral-500 dark:text-neutral-400"
-              accessibilityLiveRegion="polite"
-            >
-              {activeFilter !== 'All' || debouncedSearch
-                ? `${visibleCourses.length} of ${allCourses.length} courses`
-                : `${allCourses.length} courses available`}
-            </Text>
+          {/* Brand logo + subtitle */}
+          <View className="flex-row items-center gap-2 flex-1 mr-2">
+            <AppLogo variant="small" animate={false} pulse={false} />
+            <View>
+              <Text className="text-lg font-bold text-neutral-900 dark:text-white leading-tight">Discover Courses</Text>
+              <Text
+                className="text-xs text-neutral-500 dark:text-neutral-400"
+                accessibilityLiveRegion="polite"
+              >
+                {activeFilter !== 'All' || debouncedSearch
+                  ? `${visibleCourses.length} of ${allCourses.length} courses`
+                  : `${allCourses.length} courses available`}
+              </Text>
+            </View>
           </View>
           <View className="flex-row items-center">
             <TouchableOpacity

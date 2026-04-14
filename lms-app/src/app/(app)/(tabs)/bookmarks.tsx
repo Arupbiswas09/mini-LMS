@@ -8,6 +8,7 @@ import { useCourseStore } from '@/stores/courseStore';
 import { useBookmarks } from '@/hooks/useBookmarks';
 import { useInfiniteCourses } from '@/hooks/useCourses';
 import { CourseCard } from '@/components/course/CourseCard';
+import { AppLogo } from '@/components/ui/AppLogo';
 import type { CourseWithInstructor } from '@/types';
 
 export default function BookmarksScreen() {
@@ -26,10 +27,15 @@ export default function BookmarksScreen() {
   return (
     <SafeAreaView className="flex-1 bg-white dark:bg-neutral-900" edges={['top']}>
       <View className="px-5 py-3 border-b border-neutral-100 dark:border-neutral-800">
-        <Text className="text-2xl font-bold text-neutral-900 dark:text-white">Bookmarks</Text>
-        <Text className="text-sm text-neutral-500 dark:text-neutral-400">
-          {bookmarkedCourses.length} saved course{bookmarkedCourses.length !== 1 ? 's' : ''}
-        </Text>
+        <View className="flex-row items-center gap-2">
+          <AppLogo variant="small" animate={false} pulse={false} />
+          <View>
+            <Text className="text-lg font-bold text-neutral-900 dark:text-white leading-tight">Bookmarks</Text>
+            <Text className="text-xs text-neutral-500 dark:text-neutral-400">
+              {bookmarkedCourses.length} saved course{bookmarkedCourses.length !== 1 ? 's' : ''}
+            </Text>
+          </View>
+        </View>
       </View>
 
       {isLoading ? (

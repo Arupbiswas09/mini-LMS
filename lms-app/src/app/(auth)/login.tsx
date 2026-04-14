@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
+import { AppLogo } from '@/components/ui/AppLogo';
 import {
   View,
   Text,
@@ -90,11 +91,13 @@ export default function LoginScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View className="flex-1 justify-center px-6 py-8">
-          <View className="mb-8">
-            <Text className="text-3xl font-bold text-neutral-900 dark:text-white mb-2">
+          {/* Branded logo header */}
+          <View className="items-center mb-10">
+            <AppLogo variant="header" animate pulse={false} />
+            <Text className="text-2xl font-bold text-neutral-900 dark:text-white mt-5">
               Welcome back
             </Text>
-            <Text className="text-base text-neutral-500 dark:text-neutral-400">
+            <Text className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
               Sign in to continue learning
             </Text>
           </View>

@@ -102,7 +102,7 @@ function FeaturedBannerComponent({ courses }: FeaturedBannerProps) {
             accessibilityRole="button"
             accessibilityLabel={`Featured: ${course.title}`}
           >
-            <View className="rounded-2xl overflow-hidden bg-neutral-900" style={{ width: cardW, height: 160 }}>
+            <View className="rounded-2xl overflow-hidden bg-neutral-900" style={{ width: cardW, height: 140 }}>
               {failedImages[course.id] ? (
                 <View className="w-full h-full bg-neutral-700 items-center justify-center">
                   <Text className="text-neutral-300 text-xs">Image unavailable</Text>
@@ -120,9 +120,9 @@ function FeaturedBannerComponent({ courses }: FeaturedBannerProps) {
               <View className="absolute inset-0 bg-black/35" />
               <View className="absolute bottom-0 left-0 right-0 p-3">
                 <View className="self-start bg-primary-600/90 px-2 py-0.5 rounded-full mb-1">
-                  <Text className="text-white text-xs font-semibold">{course.category}</Text>
+                  <Text className="text-white text-[11px] font-semibold">{course.category}</Text>
                 </View>
-                <Text className="text-white text-base font-bold" numberOfLines={2}>
+                <Text className="text-white text-[15px] font-bold" numberOfLines={2}>
                   {course.title}
                 </Text>
                 <Text className="text-white/80 text-xs mt-0.5" numberOfLines={1}>

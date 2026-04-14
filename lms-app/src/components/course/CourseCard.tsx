@@ -111,9 +111,9 @@ function CourseCardComponent({
 
   if (isLoading) {
     return (
-      <View className="mb-4 rounded-2xl overflow-hidden border border-neutral-100 dark:border-neutral-700">
-        <SkeletonLoader variant="card" className="h-40 rounded-none" />
-        <View className="p-3.5 gap-2">
+      <View className="mb-3 rounded-2xl overflow-hidden border border-neutral-100 dark:border-neutral-700">
+        <SkeletonLoader variant="card" className="h-36 rounded-none" />
+        <View className="p-3 gap-2">
           <SkeletonLoader variant="line" className="w-3/4" />
           <SkeletonLoader variant="line" className="w-1/2" />
         </View>
@@ -122,7 +122,7 @@ function CourseCardComponent({
   }
 
   return (
-    <Animated.View style={[cardStyle, { marginBottom: 16 }]}>
+    <Animated.View style={[cardStyle, { marginBottom: 12 }]}>
       <View className="bg-white dark:bg-neutral-800 rounded-2xl overflow-hidden shadow-sm border border-neutral-100 dark:border-neutral-700 relative">
         <Pressable
           onPress={handlePress}
@@ -135,7 +135,7 @@ function CourseCardComponent({
         >
           <View className="relative">
             {thumbnailFailed ? (
-              <View className="w-full" style={{ aspectRatio: 16 / 9, backgroundColor: '#e5e7eb' }}>
+              <View className="w-full" style={{ aspectRatio: 4 / 3, backgroundColor: '#e5e7eb' }}>
                 <View className="flex-1 items-center justify-center">
                   <Ionicons name="image-outline" size={28} color="#9ca3af" />
                   <Text className="mt-1 text-xs text-neutral-500">Image unavailable</Text>
@@ -144,7 +144,7 @@ function CourseCardComponent({
             ) : (
               <Image
                 source={{ uri: course.thumbnail }}
-                style={{ width: '100%', aspectRatio: 16 / 9 }}
+                style={{ width: '100%', aspectRatio: 4 / 3 }}
                 contentFit="cover"
                 transition={300}
                 placeholder={{ blurhash: 'L6PZfSi_.AyE_3t7t7R**0o#DgR4' }}
@@ -153,16 +153,16 @@ function CourseCardComponent({
                 accessibilityLabel={`${course.title} thumbnail`}
               />
             )}
-            <View className="absolute top-2 left-2 bg-primary-600/90 px-2.5 py-1 rounded-full">
-              <Text className="text-white text-xs font-semibold">{course.category}</Text>
+            <View className="absolute top-2 left-2 bg-primary-600/90 px-2 py-0.5 rounded-full">
+              <Text className="text-white text-[11px] font-semibold">{course.category}</Text>
             </View>
           </View>
 
-          <View className="p-3.5">
+          <View className="p-3">
             <HighlightedText
               text={course.title}
               query={highlightQuery}
-              className="text-base font-semibold text-neutral-900 dark:text-white leading-snug"
+              className="text-[15px] font-semibold text-neutral-900 dark:text-white leading-snug"
               numberOfLines={2}
             />
 
@@ -211,7 +211,7 @@ function CourseCardComponent({
         >
           <TouchableOpacity
             onPress={handleBookmark}
-            className="w-9 h-9 rounded-full bg-white/90 items-center justify-center"
+            className="w-8 h-8 rounded-full bg-white/90 items-center justify-center"
             hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
             accessibilityRole="button"
             accessibilityLabel={isBookmarked ? 'Remove from bookmarks' : 'Add to bookmarks'}
@@ -219,7 +219,7 @@ function CourseCardComponent({
           >
             <Ionicons
               name={isBookmarked ? 'heart' : 'heart-outline'}
-              size={18}
+              size={17}
               color={isBookmarked ? '#ef4444' : '#374151'}
             />
           </TouchableOpacity>

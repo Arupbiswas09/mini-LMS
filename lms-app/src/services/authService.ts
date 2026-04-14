@@ -1,29 +1,50 @@
-import { get, post, patch } from '@/lib/api/client';
+import apiClient, { get, post, patch } from '@/lib/api/client';
 import { secureStorage } from '@/lib/storage/secureStorage';
 import { queryClient } from '@/lib/queryClient';
 import type { ApiResponse, AuthTokens, LoginCredentials, RegisterCredentials, User } from '@/types';
 
 type UserLike = User | { user?: User } | { data?: User | { user?: User } } | null | undefined;
 
+type UserApiShape = (User & { avatar?: User['avatar'] | string }) & { avatarUrl?: string };
+
+function normalizeUser(user: UserApiShape): User {
+  // Backend responses vary: `avatar` may be `{ url }`, a string URL, or `avatarUrl`.
+  const avatarUrl =
+    typeof user.avatar === 'string'
+      ? user.avatar
+      : typeof user.avatar?.url === 'string'
+        ? user.avatar.url
+        : typeof user.avatarUrl === 'string'
+          ? user.avatarUrl
+          : undefined;
+
+  const avatar =
+    avatarUrl && avatarUrl.trim().length > 0
+      ? { ...(typeof user.avatar === 'object' && user.avatar ? user.avatar : {}), url: avatarUrl.trim() }
+      : undefined;
+
+  return { ...user, avatar } satisfies User;
+}
+
 function extractUser(payload: UserLike): User {
-  const direct = payload as User | undefined;
+  const direct = payload as UserApiShape | undefined;
   if (direct && typeof direct === 'object' && '_id' in direct) {
-    return direct;
+    return normalizeUser(direct);
   }
 
-  const nestedUser = (payload as { user?: User } | undefined)?.user;
+  const nestedUser = (payload as { user?: UserApiShape } | undefined)?.user;
   if (nestedUser && typeof nestedUser === 'object' && '_id' in nestedUser) {
-    return nestedUser;
+    return normalizeUser(nestedUser);
   }
 
-  const dataNode = (payload as { data?: User | { user?: User } } | undefined)?.data;
+  const dataNode = (payload as { data?: UserApiShape | { user?: UserApiShape } } | undefined)?.data;
   if (dataNode && typeof dataNode === 'object' && '_id' in dataNode) {
-    return dataNode;
+    return normalizeUser(dataNode);
   }
 
-  const dataUser = (dataNode as { user?: User } | undefined)?.user;
+  const dataUser = (dataNode as { user?: UserApiShape } | undefined)?.user;
   if (dataUser && typeof dataUser === 'object' && '_id' in dataUser) {
-    return dataUser;
+    return normalizeUser(dataUser);
   }
 
   throw new Error('Invalid user response shape');
@@ -102,10 +123,12 @@ export const authService = {
       type: mimeType,
     } as unknown as Blob);
 
-    const response = await patch<ApiResponse<{ user: User }> | User | { user: User }>(
+    // Must override JSON default headers for multipart uploads.
+    const response = await apiClient.patch<ApiResponse<{ user: User }> | User | { user: User }>(
       '/api/v1/users/avatar',
-      formData
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
     );
-    return extractUser(response as UserLike);
+    return extractUser(response.data as UserLike);
   },
 } as const;

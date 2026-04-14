@@ -1,5 +1,5 @@
 import '../../global.css';
-import { useEffect } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { SplashScreen, Slot } from 'expo-router';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
@@ -14,6 +14,7 @@ import { usePreferencesStore } from '@/stores/preferencesStore';
 import { notificationService } from '@/services/notificationService';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useAppState } from '@/hooks/useAppState';
+import { AnimatedSplash } from '@/components/ui/AnimatedSplash';
 
 const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN?.trim();
 
@@ -39,6 +40,7 @@ function AppShell() {
   const isRestoringSession = useAuthStore((s) => s.isRestoringSession);
   const hydrate = useCourseStore((s) => s.hydrate);
   const isDarkMode = usePreferencesStore((s) => s.isDarkMode);
+  const [showSplash, setShowSplash] = useState(true);
 
   // Native feature hooks — must be called once at the root
   useNotifications();
@@ -56,26 +58,32 @@ function AppShell() {
     'Inter-Bold': require('../../assets/fonts/Inter-Bold.ttf'),
   });
 
+  const isReady = (fontsLoaded || !!fontError) && !isRestoringSession;
+
   useEffect(() => {
     void restoreSession();
     hydrate();
     void notificationService.requestPermissions();
   }, [restoreSession, hydrate]);
 
+  // Hide the NATIVE splash as soon as possible; our JS animated splash takes over.
   useEffect(() => {
-    if ((fontsLoaded || fontError) && !isRestoringSession) {
+    if (isReady) {
       void SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, fontError, isRestoringSession]);
+  }, [isReady]);
 
-  if ((!fontsLoaded && !fontError) || isRestoringSession) {
-    return null;
-  }
+  const handleSplashFinished = useCallback(() => {
+    setShowSplash(false);
+  }, []);
 
   return (
     <>
       <StatusBar style={isDarkMode ? 'light' : 'dark'} />
+      {/* Always render Slot so the navigation tree hydrates while splash plays */}
       <Slot />
+      {/* Custom animated splash sits on top until its animation finishes */}
+      {showSplash && <AnimatedSplash onFinished={handleSplashFinished} />}
     </>
   );
 }

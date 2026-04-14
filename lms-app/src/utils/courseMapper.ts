@@ -54,7 +54,9 @@ export function mapProductToCourse(product: RandomProduct): Course {
   const ratingCount = Number.isFinite(Number(product.rating?.count)) ? Number(product.rating.count) : 0;
   const productId = Number.isFinite(Number(product.id)) ? Number(product.id) : 0;
   const description = typeof product.description === 'string' ? product.description : 'No description available.';
-  const thumbnail = typeof product.image === 'string' ? product.image : '';
+  const thumbnailRaw = typeof product.image === 'string' ? product.image : '';
+  // iOS blocks insecure image URLs by default (ATS). Normalize to https when possible.
+  const thumbnail = thumbnailRaw.startsWith('http://') ? `https://${thumbnailRaw.slice('http://'.length)}` : thumbnailRaw;
 
   return {
     id: String(productId),

@@ -25,6 +25,7 @@ import { queryClient } from '@/lib/queryClient';
 import { Avatar } from '@/components/ui/Avatar';
 import { StatCard } from '@/components/ui/StatCard';
 import { SkeletonLoader } from '@/components/ui/SkeletonLoader';
+import { AppLogo } from '@/components/ui/AppLogo';
 import { ProfileUsernameSchema, type ProfileUsernameFormValues } from '@/lib/validation/schemas';
 
 export default function ProfileScreen() {
@@ -128,9 +129,12 @@ export default function ProfileScreen() {
       quality: 0.85,
     });
     if (result.canceled || !result.assets[0]) return;
+    const localUri = result.assets[0].uri;
+    // Optimistic UI: show the chosen image immediately.
+    updateUser({ avatar: { url: localUri, localPath: localUri } });
     setAvatarBusy(true);
     try {
-      const updated = await authService.updateAvatar(result.assets[0].uri);
+      const updated = await authService.updateAvatar(localUri);
       updateUser(updated);
     } catch {
       Alert.alert('Upload failed', 'Could not update your avatar. Try again.');
@@ -230,7 +234,7 @@ export default function ProfileScreen() {
     : '';
 
   const initials = user.username?.slice(0, 2).toUpperCase() ?? 'U';
-  const avatarUri = user.avatar?.url ?? null;
+  const avatarUri = user.avatar?.localPath ?? user.avatar?.url ?? null;
 
   return (
     <SafeAreaView className="flex-1 bg-white dark:bg-neutral-900" edges={['top']}>
@@ -406,6 +410,14 @@ export default function ProfileScreen() {
             <Ionicons name="log-out-outline" size={20} color="#ef4444" />
             <Text className="text-error-500 font-semibold text-base ml-2">Sign out</Text>
           </TouchableOpacity>
+        </View>
+
+        {/* Brand footer */}
+        <View className="items-center pt-8 pb-2">
+          <AppLogo variant="small" animate={false} pulse={false} />
+          <Text className="text-xs text-neutral-400 dark:text-neutral-600 mt-2">
+            miniLMS · v1.0.0
+          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>
